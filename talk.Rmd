@@ -1,5 +1,5 @@
 ---
-title: "Autocorrelation <br> in spatial regression <br> with Machine Learning models"
+title: "Autocorrelation <br> in spatial regression <br> with Machine Learning methods"
 subtitle: "(with a focus on Random Forest)"
 author: "Blas M. Benito"
 institute: "University of Alicante"
@@ -13,16 +13,38 @@ output:
       highlightLines: true
       countIncrementalSlides: false
 ---
-class: center, middle
+class: center middle
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+#required libraries
+library(ggplot2)
+library(xaringanthemer)
+library(patchwork)
+library(gstat)
+# remotes::install_github(
+#   repo = "blasbenito/spatialRF", 
+#   ref = "development",
+#   force = TRUE,
+#   quiet = TRUE
+#   )
+library(spatialRF)
+```
+
+
+```{r functions, include=FALSE, warning=FALSE}
+source("functions.R")
+```
+
 
 ```{r xaringan-themer, include=FALSE, warning=FALSE}
-library(xaringanthemer)
-style_mono_accent(
+xaringanthemer::style_mono_accent(
   base_color = "#f1605d",
   header_font_google = google_font("Montserrat"),
   text_font_google   = google_font("Montserrat"),
   code_font_google   = google_font("Fira Mono")
 )
+xaringanExtra::use_tile_view()
+# xaringanExtra::use_animate_all("slide_left")
 ```
 
 ```{r setup, include=FALSE}
@@ -30,31 +52,63 @@ options(htmltools.dir.version = FALSE)
 ```
 
 ```{css style settings, echo = FALSE}
-blockquote {
-    padding: 10px 20px;
+.blockquote {
+    padding: 10px  px;
     margin: 0 0 20px;
-    font-size: 24px;
-    border-left: 5px solid #eee;
+    font-size: 150%;
+    border-left: 5px solid #f1605d;
 }
+
+.large { 
+  font-size: 250%;
+}
+
+.medium { 
+  font-size: 200%;
+}
+
+.small { 
+  font-size: 150%;
+}
+
+.content-box { 
+    box-sizing: content-box;
+    background-color: #e2e2e2;
+  /* Total width: 160px + (2 * 20px) + (2 * 8px) = 216px
+     Total height: 80px + (2 * 20px) + (2 * 8px) = 136px
+     Content box width: 160px
+     Content box height: 80px */;
+    border-radius: 15px;
+    margin: 0 0 25px;
+    overflow: hidden;
+    padding: 20px;
+    width: 100%;
+    background-color: #f1605d;
+    font-size: 200%;
+    color: white;
+}
+
+ul {
+  list-style: none; /* Remove default bullets */
+}
+
+ul li{
+ font-size:150%;
+}
+
+ul li::before {
+  content: "\02192";  /* Add content: \2022 is the CSS Code/unicode for a bullet */
+  color: #f1605d; /* Change the color */
+  font-weight: bold; /* If you want it to be bold */
+  display: inline-block; /* Needed to add space between the bullet and the text */
+  width: 1em; /* Also needed for space (tweak if needed) */
+  margin-left: -1em; /* Also needed for space (tweak if needed) */
+  font-size: 150%;
+}
+
+
 ```
 
-
-## Tobler’s First Law of Geography 
-
-<blockquote>
-Everything is usually related to all else, but those which are near to each other are more related when compared to those that are further away.
-.right[-- <cite>Waldo Tobler, 1970</cite>]
-</blockquote>
-
-<br>
-
-```{r echo=FALSE, out.height="20%", out.width= "100%"}
-knitr::include_graphics("figures/fig1.png")
-```
-
-
----
-class: center, middle
 
 ## Latitude
 
@@ -63,7 +117,7 @@ knitr::include_graphics("figures/latitude.png")
 ```
 
 ---
-class: center, middle
+class: center middle
 
 ## Aridity index
 
@@ -119,30 +173,191 @@ knitr::include_graphics("figures/slope.png")
 ---
 class: center, middle
 
-## Topographic slope
+## Tobler’s First Law of Geography 
 
-```{r echo=FALSE, out.height="60%", out.width= "100%"}
-knitr::include_graphics("figures/slope_frames.png")
-```
-
----
-class: center, middle
-
-## Topographic slope
+.blockquote[
+Everything is usually related to all else, but those which are near to each other are more related when compared to those that are further away.
+.right[-- <cite>Waldo Tobler, 1970</cite>]
+]
 
 <br>
 
-```{r echo=FALSE, out.height="60%", out.width= "100%"}
-knitr::include_graphics("figures/slope_ab.png")
+.content-box[Similarity depends on distance]
+
+
+```{r echo=FALSE, out.height="20%", out.width= "100%", eval = FALSE}
+knitr::include_graphics("figures/fig1.png")
 ```
 
-<br><br>
+---
+class: middle center
+
+.content-box[Similarity depends on distance]
+
+<br>
+
+.left[
+
+- Effect measured as **spatial autocorrelation** (**SAC**)
+- Measured over one or several reference distances
+- High similarity over distance: **positive SAC**
+- Low similarity over distance: **negative SAC**
+- Most popular metric of **SAC** is **Moran's I**
+
+]
 
 ---
+class: middle center
 
-???
+## Moran's I
 
-Image credit: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Sharingan_triple.svg)
+.left[
+
+- Slope of the record's values versus the distance-weighted values of their neighbors.
+- Range between -1 and 1
+- Higher than zero: **positive SAC**
+- Lower than zero: **negative SAC**
+
+]
+
+---
+class: class: center, middle
+
+```{r, out.width="100%", out.height="100%", message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+
+set.seed(1)
+
+#create grid
+xy <- expand.grid(1:20, 1:20)
+names(xy) <- c("x", "y")
+
+#create distance matrix
+xy.distance <- as.matrix(dist(xy))
+
+#HIGH AUTOCORRELATION
+
+#model
+model.positive <- gstat(
+  formula = z~1, 
+  locations = ~x+y, 
+  dummy = T, 
+  beta = 1, 
+  model = vgm(psill = 0.025, range = 200, model = 'Exp'), 
+  nmax = 20
+  )
+
+#predict
+xy.positive <- predict(
+  model.positive, 
+  newdata = xy, 
+  nsim = 1
+  )
+
+#plot
+xy.positive.matrix <- ggplot(data = xy.positive) + 
+  aes(
+    x = x,
+    y = y,
+    fill = sim1
+  ) + 
+  geom_tile() + 
+  coord_fixed(expand = FALSE) + 
+  scale_fill_viridis_c(option = "C", direction = -1) + 
+  theme_bw() + 
+  labs(x = "", y = "") + 
+  theme(legend.position = "none")
+
+#moran
+xy.positive.moran <- moran(
+  x = xy.positive$sim1,
+  distance.matrix = xy.distance,
+  distance.threshold = 1
+)
+
+
+#NEUTRAL AUTOCORRELATION
+
+#model
+model.neutral <- gstat(
+  formula = z~1, 
+  locations = ~x+y, 
+  dummy = T, 
+  beta = 1, 
+  model = vgm(psill = 0.025, range = 1, model = 'Exp'), 
+  nmax = 20
+  )
+
+#predict
+xy.neutral <- predict(
+  model.neutral, 
+  newdata = xy, 
+  nsim = 1
+  )
+
+#plot
+xy.neutral.matrix <- ggplot(data = xy.neutral) + 
+  aes(
+    x = x,
+    y = y,
+    fill = sim1
+  ) + 
+  geom_tile() + 
+  coord_fixed(expand = FALSE) + 
+  scale_fill_viridis_c(option = "C", direction = -1) + 
+  theme_bw() + 
+  labs(x = "", y = "") + 
+  theme(legend.position = "none")
+
+#moran
+xy.neutral.moran <- moran(
+  x = xy.neutral$sim1,
+  distance.matrix = xy.distance,
+  distance.threshold = 1
+)
+
+#NEGATIVE AUTOCORRELATION
+
+#values from uniform distribution
+xy.negative <- data.frame(
+  x = xy$x,
+  y = xy$y,
+  sim1 = runif(nrow(xy))
+)
+
+#plot
+xy.negative.matrix <- ggplot(data = xy.negative) + 
+  aes(
+    x = x,
+    y = y,
+    fill = sim1
+  ) + 
+  geom_tile() + 
+  coord_fixed(expand = FALSE) + 
+  scale_fill_viridis_c(option = "C", direction = -1) + 
+  theme_bw() + 
+  labs(x = "", y = "") + 
+  theme(legend.position = "none")
+
+#moran
+xy.negative.moran <- moran(
+  x = xy.negative$sim1,
+  distance.matrix = xy.distance,
+  distance.threshold = 1
+)
+
+#final plot
+patchwork::wrap_plots(
+  list(
+    xy.positive.matrix,
+    xy.neutral.matrix,
+    xy.negative.matrix,
+    xy.positive.moran,
+    xy.neutral.moran,
+    xy.negative.moran
+  ),
+  ncol = 3
+)
+```
 
 
 ---
@@ -180,14 +395,6 @@ You are recommended to use the [RStudio IDE](https://www.rstudio.com/products/rs
 [2] See [#2](https://github.com/yihui/xaringan/issues/2) if you do not see the template or addin in RStudio.
 ]
 
----
-background-image: url(`r xaringan:::karl`)
-background-position: 50% 50%
-class: center, bottom, inverse
-
-# You only live once!
-
----
 
 # Hello Ninja
 
