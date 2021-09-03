@@ -78,7 +78,8 @@ moran <- function(
     ggplot2::ylab("Lagged value") +
     ggplot2::theme(
       legend.position = "none", 
-      plot.margin = ggplot2::margin(t = 0, r = 0, b = 0, l = 0)
+      plot.margin = ggplot2::margin(t = 0, r = 0, b = 0, l = 0),
+      plot.title = element_text(hjust = 0.5)
       ) +
     ggplot2::ggtitle(plot.title) +
     ggplot2::theme_bw(base_size = 10) + 

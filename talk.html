@@ -4,7 +4,7 @@
     <title>Autocorrelation   in spatial regression   with Machine Learning methods</title>
     <meta charset="utf-8" />
     <meta name="author" content="Blas M. Benito" />
-    <meta name="date" content="2021-09-02" />
+    <meta name="date" content="2021-09-03" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -33,12 +33,12 @@ class: center, middle, inverse, title-slide
 # Autocorrelation <br> in spatial regression <br> with Machine Learning methods
 ## (with a focus on Random Forest)
 ### Blas M. Benito
-### University of Alicante
-### 2021-09-02
+### University of Alicante (Spain)
+### 2021-09-03
 
 ---
 
-class: center middle
+class: inverse, center, middle
 
 
 
@@ -105,9 +105,82 @@ ul li::before {
   font-size: 150%;
 }
 
-
+.remark-slide-content.full-slide-fig {
+  padding: 0px 0px 0px 0px;
+  width: 100%;
+}
 &lt;/style&gt;
 
+
+# SPATIAL AUTOCORRELATION
+
+
+---
+class: center, middle
+
+## Tobler’s First Law of Geography 
+
+.blockquote[
+Everything is usually related to all else, but those which are near to each other are more related when compared to those that are further away.
+.right[-- &lt;cite&gt;Waldo Tobler, 1970&lt;/cite&gt;]
+]
+
+&lt;br&gt;
+
+.content-box[Similarity depends on distance]
+
+
+
+
+---
+class: middle center
+
+.content-box[Similarity depends on distance]
+
+&lt;br&gt;
+
+.left[
+
+- Effect measured as **spatial autocorrelation** (**SAC**)
+- Measured over one or several reference distances
+- High similarity over distance: **positive SAC**
+- Low similarity over distance: **negative SAC**
+- Most popular metric of **SAC** is **Moran's I**
+
+]
+
+---
+class: middle center
+
+## Moran's I
+
+.left[
+
+- Slope of record's values versus the distance-weighted values of their neighbors.
+- Range between -1 and 1
+- Higher than zero: **positive SAC**
+- Lower than zero: **negative SAC**
+
+]
+
+---
+class: center
+
+&lt;img src="talk_files/figure-html/unnamed-chunk-2-1.png" width="120%" height="60%" /&gt;
+
+---
+class: center middle
+
+![](talk_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+
+
+---
+class: center middle
+
+# Most spatial variables &lt;br&gt; show &lt;br&gt; spatial autocorrelation
+
+---
+class: center middle
 
 ## Latitude
 
@@ -158,61 +231,70 @@ class: center, middle
 ---
 class: center, middle
 
-## Tobler’s First Law of Geography 
+## So far we know that:
 
-.blockquote[
-Everything is usually related to all else, but those which are near to each other are more related when compared to those that are further away.
-.right[-- &lt;cite&gt;Waldo Tobler, 1970&lt;/cite&gt;]
+.left[
+
+- **Similarity depends on distance**
+- We measure it as **spatial autocorrelation**
+
 ]
 
-&lt;br&gt;
+.medium[
+But...
+]
 
-.content-box[Similarity depends on distance]
+.content-box[...what does SAC *really* represent?]
 
+---
+class: center, middle
 
+## Spatial autocorrelation &lt;br&gt; often represents &lt;br&gt; the *footprint* &lt;br&gt; of the process generating &lt;br&gt; the variable of interest!
 
+---
+class: center
+
+## Cholera map (John Snow&lt;sup&gt;1&lt;/sup&gt;, 1854)
+
+&lt;img src="figures/cholera.jpg" width="60%" height="60%" /&gt;
+
+.small[
+.footnote[
+[1] Not *that* John Snow
+]
+]
 
 ---
 class: middle center
 
-.content-box[Similarity depends on distance]
+# Abundance
 
 &lt;br&gt;
 
 .left[
 
-- Effect measured as **spatial autocorrelation** (**SAC**)
-- Measured over one or several reference distances
-- High similarity over distance: **positive SAC**
-- Low similarity over distance: **negative SAC**
-- Most popular metric of **SAC** is **Moran's I**
+- Proximity among trees in a forest due to short distance dispersal.
 
 ]
 
 ---
-class: middle center
+class: center, middle
 
-## Moran's I
-
-.left[
-
-- Slope of the record's values versus the distance-weighted values of their neighbors.
-- Range between -1 and 1
-- Higher than zero: **positive SAC**
-- Lower than zero: **negative SAC**
-
-]
+# But spatial autocorrelation &lt;br&gt; also depends on how &lt;br&gt; we look at the world
 
 ---
-class: class: center, middle
+class: center, middle
 
-&lt;img src="talk_files/figure-html/unnamed-chunk-10-1.png" width="100%" height="100%" /&gt;
+## Topographic slope
 
+&lt;img src="figures/slope_frames.png" width="100%" height="60%" /&gt;
 
 ---
-class: inverse, center, middle
+class: center, middle
 
-# Get Started
+## Topographic slope
+
+&lt;img src="figures/slope_ab.png" width="100%" height="60%" /&gt;
 
 ---
 
@@ -485,8 +567,8 @@ library(leaflet)
 leaflet() %&gt;% addTiles() %&gt;% setView(-93.65, 42.0285, zoom = 17)
 ```
 
-<div id="htmlwidget-923d037d181b1ab9c8fa" style="width:100%;height:432px;" class="leaflet html-widget"></div>
-<script type="application/json" data-for="htmlwidget-923d037d181b1ab9c8fa">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]}],"setView":[[42.0285,-93.65],17,[]]},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-1fa3197130849dcf7cc7" style="width:100%;height:432px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1fa3197130849dcf7cc7">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]}],"setView":[[42.0285,-93.65],17,[]]},"evals":[],"jsHooks":[]}</script>
 
 ---
 
@@ -498,8 +580,8 @@ DT::datatable(
 )
 ```
 
-<div id="htmlwidget-78664ce8f31956cafab2" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-78664ce8f31956cafab2">{"x":{"filter":"none","fillContainer":false,"data":[["1","2","3","4","5","6","7","8","9","10"],[5.1,4.9,4.7,4.6,5,5.4,4.6,5,4.4,4.9],[3.5,3,3.2,3.1,3.6,3.9,3.4,3.4,2.9,3.1],[1.4,1.4,1.3,1.5,1.4,1.7,1.4,1.5,1.4,1.5],[0.2,0.2,0.2,0.2,0.2,0.4,0.3,0.2,0.2,0.1],["setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Sepal.Length<\/th>\n      <th>Sepal.Width<\/th>\n      <th>Petal.Length<\/th>\n      <th>Petal.Width<\/th>\n      <th>Species<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":8,"columnDefs":[{"className":"dt-right","targets":[1,2,3,4]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[8,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-53e01bf3b8f6ef7b8760" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-53e01bf3b8f6ef7b8760">{"x":{"filter":"none","fillContainer":false,"data":[["1","2","3","4","5","6","7","8","9","10"],[5.1,4.9,4.7,4.6,5,5.4,4.6,5,4.4,4.9],[3.5,3,3.2,3.1,3.6,3.9,3.4,3.4,2.9,3.1],[1.4,1.4,1.3,1.5,1.4,1.7,1.4,1.5,1.4,1.5],[0.2,0.2,0.2,0.2,0.2,0.4,0.3,0.2,0.2,0.1],["setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Sepal.Length<\/th>\n      <th>Sepal.Width<\/th>\n      <th>Petal.Length<\/th>\n      <th>Petal.Width<\/th>\n      <th>Species<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":8,"columnDefs":[{"className":"dt-right","targets":[1,2,3,4]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[8,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
 
 ---
 

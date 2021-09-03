@@ -2,7 +2,7 @@
 title: "Autocorrelation <br> in spatial regression <br> with Machine Learning methods"
 subtitle: "(with a focus on Random Forest)"
 author: "Blas M. Benito"
-institute: "University of Alicante"
+institute: "University of Alicante (Spain)"
 date: "`r Sys.Date()`"
 output:
   xaringan::moon_reader:
@@ -13,14 +13,15 @@ output:
       highlightLines: true
       countIncrementalSlides: false
 ---
-class: center middle
+class: inverse, center, middle
 
-```{r, echo = FALSE, message = FALSE, warning = FALSE}
+```{r loadpackages, echo = FALSE, message = FALSE, warning = FALSE}
 #required libraries
 library(ggplot2)
 library(xaringanthemer)
 library(patchwork)
 library(gstat)
+library(magrittr)
 # remotes::install_github(
 #   repo = "blasbenito/spatialRF", 
 #   ref = "development",
@@ -106,9 +107,343 @@ ul li::before {
   font-size: 150%;
 }
 
+.remark-slide-content.full-slide-fig {
+  padding: 0px 0px 0px 0px;
+  width: 100%;
+}
+```
+
+
+# SPATIAL AUTOCORRELATION
+
+
+---
+class: center, middle
+
+## Tobler’s First Law of Geography 
+
+.blockquote[
+Everything is usually related to all else, but those which are near to each other are more related when compared to those that are further away.
+.right[-- <cite>Waldo Tobler, 1970</cite>]
+]
+
+<br>
+
+.content-box[Similarity depends on distance]
+
+
+```{r echo=FALSE, out.height="20%", out.width= "100%", eval = FALSE}
+knitr::include_graphics("figures/fig1.png")
+```
+
+---
+class: middle center
+
+.content-box[Similarity depends on distance]
+
+<br>
+
+.left[
+
+- Effect measured as **spatial autocorrelation** (**SAC**)
+- Measured over one or several reference distances
+- High similarity over distance: **positive SAC**
+- Low similarity over distance: **negative SAC**
+- Most popular metric of **SAC** is **Moran's I**
+
+]
+
+---
+class: middle center
+
+## Moran's I
+
+.left[
+
+- Slope of record's values versus the distance-weighted values of their neighbors.
+- Range between -1 and 1
+- Higher than zero: **positive SAC**
+- Lower than zero: **negative SAC**
+
+]
+
+---
+class: center
+
+```{r, out.width="120%", out.height="60%", message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+
+set.seed(1)
+
+#create grid
+xy <- expand.grid(1:20, 1:20)
+names(xy) <- c("x", "y")
+
+#create distance matrix
+xy.distance <- as.matrix(dist(xy))
+
+#HIGH AUTOCORRELATION
+
+#model
+model.positive <- gstat(
+  formula = z~1, 
+  locations = ~x+y, 
+  dummy = T, 
+  beta = 1, 
+  model = vgm(psill = 0.025, range = 200, model = 'Exp'), 
+  nmax = 20
+  )
+
+#predict
+xy.positive <- predict(
+  model.positive, 
+  newdata = xy, 
+  nsim = 1
+  )
+
+#plot
+xy.positive.matrix <- ggplot(data = xy.positive) + 
+  aes(
+    x = x,
+    y = y,
+    fill = sim1
+  ) + 
+  geom_tile() + 
+  coord_fixed(expand = FALSE) + 
+  scale_fill_viridis_c(option = "C", direction = -1) + 
+  theme_bw() + 
+  labs(x = "", y = "") + 
+  theme(
+    legend.position = "none", 
+    plot.title = element_text(hjust = 0.5)
+    ) + 
+  ggtitle("1")
+
+#moran
+xy.positive.moran <- moran(
+  x = xy.positive$sim1,
+  distance.matrix = xy.distance,
+  distance.threshold = 1
+)
+
+
+#NEUTRAL AUTOCORRELATION
+
+#model
+model.neutral <- gstat(
+  formula = z~1, 
+  locations = ~x+y, 
+  dummy = T, 
+  beta = 1, 
+  model = vgm(psill = 0.025, range = 1, model = 'Exp'), 
+  nmax = 20
+  )
+
+#predict
+xy.neutral <- predict(
+  model.neutral, 
+  newdata = xy, 
+  nsim = 1
+  )
+
+#plot
+xy.neutral.matrix <- ggplot(data = xy.neutral) + 
+  aes(
+    x = x,
+    y = y,
+    fill = sim1
+  ) + 
+  geom_tile() + 
+  coord_fixed(expand = FALSE) + 
+  scale_fill_viridis_c(option = "C", direction = -1) + 
+  theme_bw() + 
+  labs(x = "", y = "") + 
+  theme(
+    legend.position = "none", 
+    plot.title = element_text(hjust = 0.5)
+    ) + 
+  ggtitle("2")
+
+#moran
+xy.neutral.moran <- moran(
+  x = xy.neutral$sim1,
+  distance.matrix = xy.distance,
+  distance.threshold = 1
+)
+
+#NEGATIVE AUTOCORRELATION
+
+#values from uniform distribution
+xy.negative <- data.frame(
+  x = xy$x,
+  y = xy$y,
+  sim1 = runif(nrow(xy))
+)
+
+#plot
+xy.negative.matrix <- ggplot(data = xy.negative) + 
+  aes(
+    x = x,
+    y = y,
+    fill = sim1
+  ) + 
+  geom_tile() + 
+  coord_fixed(expand = FALSE) + 
+  scale_fill_viridis_c(option = "C", direction = -1) + 
+  theme_bw() + 
+  labs(x = "", y = "") + 
+  theme(
+    legend.position = "none", 
+    plot.title = element_text(hjust = 0.5)
+    ) + 
+  ggtitle("3")
+
+#moran
+xy.negative.moran <- moran(
+  x = xy.negative$sim1,
+  distance.matrix = xy.distance,
+  distance.threshold = 1
+)
+
+#final plot
+patchwork::wrap_plots(
+  list(
+    xy.positive.matrix,
+    xy.neutral.matrix,
+    xy.negative.matrix,
+    xy.positive.moran,
+    xy.neutral.moran,
+    xy.negative.moran
+  ),
+  ncol = 3
+) + plot_annotation(theme = theme(plot.margin = unit(c(0,0,3,0),"cm")))
 
 ```
 
+---
+class: center middle
+
+```{r, fig.height=9, fig.width=13, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+#gathering Moran's I values over distances for each group
+xy.positive.df <- spatialRF::moran_multithreshold(
+  x = xy.positive$sim1,
+  distance.matrix = xy.distance,
+  distance.thresholds = 1:20,
+  verbose = FALSE
+)$per.distance
+
+xy.positive.df$group <- 1
+
+xy.neutral.df <- spatialRF::moran_multithreshold(
+  x = xy.neutral$sim1,
+  distance.matrix = xy.distance,
+  distance.thresholds = 1:20,
+  verbose = FALSE
+)$per.distance
+
+xy.neutral.df$group <- 2
+
+xy.negative.df <- spatialRF::moran_multithreshold(
+  x = xy.negative$sim1,
+  distance.matrix = xy.distance,
+  distance.thresholds = 1:20,
+  verbose = FALSE
+)$per.distance
+
+xy.negative.df$group <- 3
+
+xy.df <- rbind(
+  xy.positive.df,
+  xy.neutral.df,
+  xy.negative.df
+)
+
+#plot
+xy.df.plot <- ggplot(data = xy.df) +
+  aes(
+    x = distance.threshold,
+    y = moran.i,
+    group = as.factor(group),
+    color = as.factor(group)
+  ) +
+  geom_line(size = 2.5) +
+  scale_color_viridis_d(option = "C", end = 0.8) +
+  scale_x_continuous(breaks = xy.df$distance.threshold) +
+  theme_bw(base_size = 30) +
+  labs(
+    x = "Distance to neighbors", 
+    y = "Moran's I",
+    title = "Multiscale (or incremental) Moran's I"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "none"
+  ) + 
+  geom_segment(
+    aes(
+      x = 2.5,
+      y = 0.036,
+      xend = 2.5,
+      yend = 0.15
+    ),
+    color = "black"
+  ) + 
+  geom_segment(
+    aes(
+      x = 12,
+      y = 0,
+      xend = 12,
+      yend = 0.15
+    ),
+    color = "black"
+  ) + 
+  geom_segment(
+    aes(
+      x = 10,
+      y = 0.45,
+      xend = 15,
+      yend = 0.45
+    ),
+    color = "black"
+  )
+
+#adding insets
+xy.df.plot + inset_element(
+  xy.positive.matrix +
+    theme(
+      plot.margin = margin(t = 0, r = 0, b = -15, l = -15),
+      axis.ticks = element_blank(),
+      axis.text = element_blank(),
+      plot.title = element_blank()),
+  left = 0.55, bottom = 0.65, right = 0.90, top = 0.95
+  ) + 
+  inset_element(
+  xy.neutral.matrix +
+    theme(
+      plot.margin = margin(t = 0, r = 0, b = -15, l = -15),
+      axis.ticks = element_blank(),
+      axis.text = element_blank(),
+      plot.title = element_blank()),
+  left = 0.00, bottom = 0.15, right = 0.25, top = 0.45
+  ) +
+  inset_element(
+  xy.negative.matrix +
+    theme(
+      plot.margin = margin(t = 0, r = 0, b = -15, l = -15),
+      axis.ticks = element_blank(),
+      axis.text = element_blank(),
+      plot.title = element_blank()),
+  left = 0.45, bottom = 0.10, right = 0.70, top = 0.40
+  )
+```
+
+
+---
+class: center middle
+
+# Most spatial variables <br> show <br> spatial autocorrelation
+
+---
+class: center middle
 
 ## Latitude
 
@@ -173,197 +508,76 @@ knitr::include_graphics("figures/slope.png")
 ---
 class: center, middle
 
-## Tobler’s First Law of Geography 
+## So far we know that:
 
-.blockquote[
-Everything is usually related to all else, but those which are near to each other are more related when compared to those that are further away.
-.right[-- <cite>Waldo Tobler, 1970</cite>]
+.left[
+
+- **Similarity depends on distance**
+- We measure it as **spatial autocorrelation**
+
 ]
 
-<br>
+.medium[
+But...
+]
 
-.content-box[Similarity depends on distance]
+.content-box[...what does SAC *really* represent?]
 
+---
+class: center, middle
 
-```{r echo=FALSE, out.height="20%", out.width= "100%", eval = FALSE}
-knitr::include_graphics("figures/fig1.png")
+## Spatial autocorrelation <br> often represents <br> the *footprint* <br> of the process generating <br> the variable of interest!
+
+---
+class: center
+
+## Cholera map (John Snow<sup>1</sup>, 1854)
+
+```{r echo=FALSE, out.width="60%", out.height="60%"}
+knitr::include_graphics("figures/cholera.jpg")
 ```
+
+.small[
+.footnote[
+[1] Not *that* John Snow
+]
+]
 
 ---
 class: middle center
 
-.content-box[Similarity depends on distance]
+# Abundance
 
 <br>
 
 .left[
 
-- Effect measured as **spatial autocorrelation** (**SAC**)
-- Measured over one or several reference distances
-- High similarity over distance: **positive SAC**
-- Low similarity over distance: **negative SAC**
-- Most popular metric of **SAC** is **Moran's I**
+- Proximity among trees in a forest due to short distance dispersal.
 
 ]
 
 ---
-class: middle center
+class: center, middle
 
-## Moran's I
-
-.left[
-
-- Slope of the record's values versus the distance-weighted values of their neighbors.
-- Range between -1 and 1
-- Higher than zero: **positive SAC**
-- Lower than zero: **negative SAC**
-
-]
+# But spatial autocorrelation <br> also depends on how <br> we look at the world
 
 ---
-class: class: center, middle
+class: center, middle
 
-```{r, out.width="100%", out.height="100%", message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+## Topographic slope
 
-set.seed(1)
-
-#create grid
-xy <- expand.grid(1:20, 1:20)
-names(xy) <- c("x", "y")
-
-#create distance matrix
-xy.distance <- as.matrix(dist(xy))
-
-#HIGH AUTOCORRELATION
-
-#model
-model.positive <- gstat(
-  formula = z~1, 
-  locations = ~x+y, 
-  dummy = T, 
-  beta = 1, 
-  model = vgm(psill = 0.025, range = 200, model = 'Exp'), 
-  nmax = 20
-  )
-
-#predict
-xy.positive <- predict(
-  model.positive, 
-  newdata = xy, 
-  nsim = 1
-  )
-
-#plot
-xy.positive.matrix <- ggplot(data = xy.positive) + 
-  aes(
-    x = x,
-    y = y,
-    fill = sim1
-  ) + 
-  geom_tile() + 
-  coord_fixed(expand = FALSE) + 
-  scale_fill_viridis_c(option = "C", direction = -1) + 
-  theme_bw() + 
-  labs(x = "", y = "") + 
-  theme(legend.position = "none")
-
-#moran
-xy.positive.moran <- moran(
-  x = xy.positive$sim1,
-  distance.matrix = xy.distance,
-  distance.threshold = 1
-)
-
-
-#NEUTRAL AUTOCORRELATION
-
-#model
-model.neutral <- gstat(
-  formula = z~1, 
-  locations = ~x+y, 
-  dummy = T, 
-  beta = 1, 
-  model = vgm(psill = 0.025, range = 1, model = 'Exp'), 
-  nmax = 20
-  )
-
-#predict
-xy.neutral <- predict(
-  model.neutral, 
-  newdata = xy, 
-  nsim = 1
-  )
-
-#plot
-xy.neutral.matrix <- ggplot(data = xy.neutral) + 
-  aes(
-    x = x,
-    y = y,
-    fill = sim1
-  ) + 
-  geom_tile() + 
-  coord_fixed(expand = FALSE) + 
-  scale_fill_viridis_c(option = "C", direction = -1) + 
-  theme_bw() + 
-  labs(x = "", y = "") + 
-  theme(legend.position = "none")
-
-#moran
-xy.neutral.moran <- moran(
-  x = xy.neutral$sim1,
-  distance.matrix = xy.distance,
-  distance.threshold = 1
-)
-
-#NEGATIVE AUTOCORRELATION
-
-#values from uniform distribution
-xy.negative <- data.frame(
-  x = xy$x,
-  y = xy$y,
-  sim1 = runif(nrow(xy))
-)
-
-#plot
-xy.negative.matrix <- ggplot(data = xy.negative) + 
-  aes(
-    x = x,
-    y = y,
-    fill = sim1
-  ) + 
-  geom_tile() + 
-  coord_fixed(expand = FALSE) + 
-  scale_fill_viridis_c(option = "C", direction = -1) + 
-  theme_bw() + 
-  labs(x = "", y = "") + 
-  theme(legend.position = "none")
-
-#moran
-xy.negative.moran <- moran(
-  x = xy.negative$sim1,
-  distance.matrix = xy.distance,
-  distance.threshold = 1
-)
-
-#final plot
-patchwork::wrap_plots(
-  list(
-    xy.positive.matrix,
-    xy.neutral.matrix,
-    xy.negative.matrix,
-    xy.positive.moran,
-    xy.neutral.moran,
-    xy.negative.moran
-  ),
-  ncol = 3
-)
+```{r echo=FALSE, out.height="60%", out.width= "100%"}
+knitr::include_graphics("figures/slope_frames.png")
 ```
 
-
 ---
-class: inverse, center, middle
+class: center, middle
 
-# Get Started
+## Topographic slope
+
+```{r echo=FALSE, out.height="60%", out.width= "100%"}
+knitr::include_graphics("figures/slope_ab.png")
+```
 
 ---
 
