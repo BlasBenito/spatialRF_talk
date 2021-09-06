@@ -4,7 +4,7 @@
     <title>Autocorrelation   in spatial regression   with Machine Learning methods</title>
     <meta charset="utf-8" />
     <meta name="author" content="Blas M. Benito" />
-    <meta name="date" content="2021-09-03" />
+    <meta name="date" content="2021-09-06" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -34,11 +34,11 @@ class: center, middle, inverse, title-slide
 ## (with a focus on Random Forest)
 ### Blas M. Benito
 ### University of Alicante (Spain)
-### 2021-09-03
+### 2021-09-06
 
 ---
 
-class: inverse, center, middle
+class: center, middle
 
 
 
@@ -111,9 +111,21 @@ ul li::before {
 }
 &lt;/style&gt;
 
+# Availability
 
-# SPATIAL AUTOCORRELATION
+.small[
+Slideshow + code + data are available at &lt;br&gt;
+[https://github.com/BlasBenito/spatialRF_talk](https://github.com/BlasBenito/spatialRF_talk)
+]
 
+&lt;img src="figures/github.png" width="80%" height="60%" /&gt;
+
+
+---
+class: inverse, center, middle
+
+
+#  WHAT IS &lt;br&gt; SPATIAL AUTOCORRELATION &lt;br&gt; AND &lt;br&gt; WHY DO WE CARE?
 
 ---
 class: center, middle
@@ -128,9 +140,6 @@ Everything is usually related to all else, but those which are near to each othe
 &lt;br&gt;
 
 .content-box[Similarity depends on distance]
-
-
-
 
 ---
 class: middle center
@@ -171,7 +180,8 @@ class: center
 ---
 class: center middle
 
-![](talk_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-3-1.png" width="936" /&gt;
+
 
 
 ---
@@ -182,51 +192,35 @@ class: center middle
 ---
 class: center middle
 
-## Latitude
+&lt;img src="talk_files/figure-html/unnamed-chunk-5-1.png" width="864" /&gt;
 
-&lt;img src="figures/latitude.png" width="100%" height="60%" /&gt;
 
 ---
 class: center middle
 
-## Aridity index
-
-&lt;img src="figures/aridity.png" width="100%" height="60%" /&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-6-1.png" width="864" /&gt;
 
 ---
-class: center, middle
+class: center middle
 
-## Annual temperature
+&lt;img src="talk_files/figure-html/unnamed-chunk-7-1.png" width="864" /&gt;
 
-&lt;img src="figures/temperature.png" width="100%" height="60%" /&gt;
-
----
-class: center, middle
-
-## Normalized vegetation index
-
-&lt;img src="figures/ndvi.png" width="100%" height="60%" /&gt;
 
 ---
-class: center, middle
+class: center middle
 
-## Accessibility
-
-&lt;img src="figures/accessibility.png" width="100%" height="60%" /&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-8-1.png" width="864" /&gt;
 
 ---
-class: center, middle
+class: center middle
 
-## Human footprint
+&lt;img src="talk_files/figure-html/unnamed-chunk-9-1.png" width="864" /&gt;
 
-&lt;img src="figures/human_footprint.png" width="100%" height="60%" /&gt;
 
 ---
-class: center, middle
+class: center middle
 
-## Topographic slope
-
-&lt;img src="figures/slope.png" width="100%" height="60%" /&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-10-1.png" width="864" /&gt;
 
 ---
 class: center, middle
@@ -265,22 +259,68 @@ class: center
 ]
 
 ---
-class: middle center
+class: center
 
-# Abundance
+## Cholera map (John Snow&lt;sup&gt;1&lt;/sup&gt;, 1854)
 
-&lt;br&gt;
+&lt;img src="figures/cholera2.jpg" width="60%" height="60%" /&gt;
 
-.left[
+.small[
+.footnote[
+[1] Not *that* John Snow
+]
+]
 
-- Proximity among trees in a forest due to short distance dispersal.
+---
+class: center
+
+## Colony of Imperial cormorants &lt;br&gt; (*Leucocarbo atriceps*)
+
+
+&lt;img src="figures/cormorants.jpeg" width="90%" height="60%" /&gt;
+
+.small[
+
+Source: [www.dailymail.co.uk](https://www.dailymail.co.uk/news/article-2982830/Amazing-photographs-thousands-nesting-Cormorants-gather-crowded-beach-annual-nesting-season.html)
 
 ]
 
 ---
-class: center, middle
+class: center
 
-# But spatial autocorrelation &lt;br&gt; also depends on how &lt;br&gt; we look at the world
+## Colony of Imperial cormorants &lt;br&gt; (*Leucocarbo atriceps*)
+
+
+&lt;img src="figures/cormorants2.jpeg" width="90%" height="60%" /&gt;
+
+.small[
+
+Source: [www.dailymail.co.uk](https://www.dailymail.co.uk/news/article-2982830/Amazing-photographs-thousands-nesting-Cormorants-gather-crowded-beach-annual-nesting-season.html)
+
+]
+
+---
+class: center
+
+## *Quercus pyrenaica* forest
+
+
+&lt;img src="figures/quercus.png" width="90%" height="60%" /&gt;
+
+---
+class: center
+
+## Mammal's richness
+
+
+&lt;img src="talk_files/figure-html/unnamed-chunk-16-1.png" width="936" /&gt;
+
+---
+class: inverse middle center
+
+# HOW DO WE INCORPORATE &lt;br&gt; SPATIAL AUTOCORRELATION &lt;br&gt; INTO ML MODELS?
+
+
 
 ---
 class: center, middle
@@ -567,8 +607,8 @@ library(leaflet)
 leaflet() %&gt;% addTiles() %&gt;% setView(-93.65, 42.0285, zoom = 17)
 ```
 
-<div id="htmlwidget-1fa3197130849dcf7cc7" style="width:100%;height:432px;" class="leaflet html-widget"></div>
-<script type="application/json" data-for="htmlwidget-1fa3197130849dcf7cc7">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]}],"setView":[[42.0285,-93.65],17,[]]},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-5f7848d94569b3ac12cc" style="width:100%;height:432px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-5f7848d94569b3ac12cc">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]}],"setView":[[42.0285,-93.65],17,[]]},"evals":[],"jsHooks":[]}</script>
 
 ---
 
@@ -580,8 +620,8 @@ DT::datatable(
 )
 ```
 
-<div id="htmlwidget-53e01bf3b8f6ef7b8760" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-53e01bf3b8f6ef7b8760">{"x":{"filter":"none","fillContainer":false,"data":[["1","2","3","4","5","6","7","8","9","10"],[5.1,4.9,4.7,4.6,5,5.4,4.6,5,4.4,4.9],[3.5,3,3.2,3.1,3.6,3.9,3.4,3.4,2.9,3.1],[1.4,1.4,1.3,1.5,1.4,1.7,1.4,1.5,1.4,1.5],[0.2,0.2,0.2,0.2,0.2,0.4,0.3,0.2,0.2,0.1],["setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Sepal.Length<\/th>\n      <th>Sepal.Width<\/th>\n      <th>Petal.Length<\/th>\n      <th>Petal.Width<\/th>\n      <th>Species<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":8,"columnDefs":[{"className":"dt-right","targets":[1,2,3,4]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[8,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-57e8d944a7e1a90d7a2b" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-57e8d944a7e1a90d7a2b">{"x":{"filter":"none","fillContainer":false,"data":[["1","2","3","4","5","6","7","8","9","10"],[5.1,4.9,4.7,4.6,5,5.4,4.6,5,4.4,4.9],[3.5,3,3.2,3.1,3.6,3.9,3.4,3.4,2.9,3.1],[1.4,1.4,1.3,1.5,1.4,1.7,1.4,1.5,1.4,1.5],[0.2,0.2,0.2,0.2,0.2,0.4,0.3,0.2,0.2,0.1],["setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Sepal.Length<\/th>\n      <th>Sepal.Width<\/th>\n      <th>Petal.Length<\/th>\n      <th>Petal.Width<\/th>\n      <th>Species<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":8,"columnDefs":[{"className":"dt-right","targets":[1,2,3,4]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[8,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
 
 ---
 

@@ -13,15 +13,16 @@ output:
       highlightLines: true
       countIncrementalSlides: false
 ---
-class: inverse, center, middle
+class: center, middle
 
 ```{r loadpackages, echo = FALSE, message = FALSE, warning = FALSE}
 #required libraries
-library(ggplot2)
+library(tidyverse)
 library(xaringanthemer)
 library(patchwork)
 library(gstat)
-library(magrittr)
+library(raster)
+library(geosphere)
 # remotes::install_github(
 #   repo = "blasbenito/spatialRF", 
 #   ref = "development",
@@ -113,9 +114,23 @@ ul li::before {
 }
 ```
 
+# Availability
 
-# SPATIAL AUTOCORRELATION
+.small[
+Slideshow + code + data are available at <br>
+[https://github.com/BlasBenito/spatialRF_talk](https://github.com/BlasBenito/spatialRF_talk)
+]
 
+```{r echo=FALSE, out.height="60%", fig.retina = 2, out.width= "80%"}
+knitr::include_graphics("figures/github.png")
+```
+
+
+---
+class: inverse, center, middle
+
+
+#  WHAT IS <br> SPATIAL AUTOCORRELATION <br> AND <br> WHY DO WE CARE?
 
 ---
 class: center, middle
@@ -130,11 +145,6 @@ Everything is usually related to all else, but those which are near to each othe
 <br>
 
 .content-box[Similarity depends on distance]
-
-
-```{r echo=FALSE, out.height="20%", out.width= "100%", eval = FALSE}
-knitr::include_graphics("figures/fig1.png")
-```
 
 ---
 class: middle center
@@ -170,7 +180,7 @@ class: middle center
 ---
 class: center
 
-```{r, out.width="120%", out.height="60%", message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+```{r, out.width="120%", fig.retina = 2, out.height="60%", message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
 
 set.seed(1)
 
@@ -322,7 +332,8 @@ patchwork::wrap_plots(
 ---
 class: center middle
 
-```{r, fig.height=9, fig.width=13, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+```{r, fig.height=9, fig.width=13, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+
 #gathering Moran's I values over distances for each group
 xy.positive.df <- spatialRF::moran_multithreshold(
   x = xy.positive$sim1,
@@ -435,6 +446,10 @@ xy.df.plot + inset_element(
   left = 0.45, bottom = 0.10, right = 0.70, top = 0.40
   )
 ```
+```{r, include = FALSE}
+#removing objects we don't need
+rm(fit, model.neutral, model.positive, xy, xy.df, xy.df.plot, xy.distance, xy.negative, xy.negative.df, xy.negative.matrix, xy.negative.moran, xy.neutral, xy.neutral.df, xy.neutral.matrix, xy.neutral.moran, xy.positive, xy.positive.df, xy.positive.matrix, xy.positive.moran, dojutsu)
+```
 
 
 ---
@@ -445,64 +460,486 @@ class: center middle
 ---
 class: center middle
 
-## Latitude
+```{r, fig.height=9, fig.width=12, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+#loading raster
+x <- raster::raster("data/aridity.tif")
+names(x) <- "variable"
 
-```{r echo=FALSE, out.height="60%", out.width= "100%"}
-knitr::include_graphics("figures/latitude.png")
+#cropping to square
+new.extent <- raster::extent(
+  c(
+    xmin = extent(x)@xmax - (extent(x)@ymax - extent(x)@ymin),
+    xmax = extent(x)@xmax,
+    ymin = extent(x)@ymin,
+    ymax = extent(x)@ymax
+  )
+)
+
+x <- raster::crop(
+  x = x,
+  y = new.extent
+)
+
+#regular grid over raster file
+xy <- raster::sampleRegular(
+  x = x, 
+  size = 1000,
+  xy = TRUE
+  ) %>% 
+  as.data.frame() %>% 
+  dplyr::select(x, y)
+
+#distance matrix
+xy.distance <- geosphere::distm(as.matrix(xy), fun = distGeo) / 1000
+
+#extracting values of the raster data
+x.values <- raster::extract(
+  x = x,
+  y = xy,
+  df = TRUE
+)[, 2]
+
+#autocorrelation
+xy.moran.plot <- spatialRF::moran_multithreshold(
+  x = x.values,
+  distance.matrix = xy.distance,
+  distance.thresholds = seq(0, 100, by = 10),
+  verbose = FALSE
+)$plot + 
+  theme_bw(base_size = 25) +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(hjust = 0.5)
+    ) +
+  scale_size_manual(
+    breaks = c("< 0.05", ">= 0.05"),
+    values = c(5, 10),
+    drop = FALSE
+  ) + 
+  labs(size = "p-value") + 
+  scale_y_continuous(limits = c(0, 1)) + 
+  scale_fill_viridis_c(option = "C")
+
+#plot map
+x.map <- ggplot(data = raster::as.data.frame(x, xy = TRUE)) + 
+  geom_tile(
+    aes(
+      x = x, 
+      y = y, 
+      fill = variable
+    )
+  ) + 
+  coord_fixed(expand = FALSE) + 
+  scale_fill_viridis_c(option = "C") + 
+  theme_bw(base_size = 25) + 
+  theme(
+    legend.position = "bottom", 
+    legend.key.width = unit(2,"cm"),
+    plot.title = element_text(hjust = 0.5)
+  ) + 
+  labs(
+    fill = "",
+    title = "Aridity index",
+    x = "Longitude",
+    y = "Latitude"
+  )
+
+x.map | xy.moran.plot
+```
+
+
+---
+class: center middle
+
+```{r, fig.height=9, fig.width=12, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+#loading raster
+x <- raster::raster("data/temperature.tif")
+names(x) <- "variable"
+x <- x/10
+
+#cropping to square
+new.extent <- raster::extent(
+  c(
+    xmin = extent(x)@xmax - (extent(x)@ymax - extent(x)@ymin),
+    xmax = extent(x)@xmax,
+    ymin = extent(x)@ymin,
+    ymax = extent(x)@ymax
+  )
+)
+
+x <- raster::crop(
+  x = x,
+  y = new.extent
+)
+
+#extracting values of the raster data
+x.values <- raster::extract(
+  x = x,
+  y = xy,
+  df = TRUE
+)[, 2]
+
+#autocorrelation
+xy.moran.plot <- spatialRF::moran_multithreshold(
+  x = x.values,
+  distance.matrix = xy.distance,
+  distance.thresholds = seq(0, 100, by = 10),
+  verbose = FALSE
+)$plot + 
+  theme_bw(base_size = 25) +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(hjust = 0.5)
+    ) +
+  scale_size_manual(
+    breaks = c("< 0.05", ">= 0.05"),
+    values = c(5, 10),
+    drop = FALSE
+  ) + 
+  labs(size = "p-value") + 
+  scale_y_continuous(limits = c(0, 1)) + 
+  scale_fill_viridis_c(option = "C")
+
+#plot map
+x.map <- ggplot(data = raster::as.data.frame(x, xy = TRUE)) + 
+  geom_tile(
+    aes(
+      x = x, 
+      y = y, 
+      fill = variable
+    )
+  ) + 
+  coord_fixed(expand = FALSE) + 
+  scale_fill_viridis_c(option = "C") + 
+  theme_bw(base_size = 25) + 
+  theme(
+    legend.position = "bottom", 
+    legend.key.width = unit(2,"cm"),
+    plot.title = element_text(hjust = 0.5)
+  ) + 
+  labs(
+    fill = "",
+    title = "Mean temperature",
+    x = "Longitude",
+    y = "Latitude"
+  )
+
+x.map | xy.moran.plot
 ```
 
 ---
 class: center middle
 
-## Aridity index
+```{r, fig.height=9, fig.width=12, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+#loading raster
+x <- raster::raster("data/ndvi.tif")
+names(x) <- "variable"
+x[is.na(x)] <- 0
 
-```{r echo=FALSE, out.height="60%", out.width= "100%"}
-knitr::include_graphics("figures/aridity.png")
+#cropping to square
+new.extent <- raster::extent(
+  c(
+    xmin = extent(x)@xmax - (extent(x)@ymax - extent(x)@ymin),
+    xmax = extent(x)@xmax,
+    ymin = extent(x)@ymin,
+    ymax = extent(x)@ymax
+  )
+)
+
+x <- raster::crop(
+  x = x,
+  y = new.extent
+)
+
+#extracting values of the raster data
+x.values <- raster::extract(
+  x = x,
+  y = xy,
+  df = TRUE
+)[, 2]
+
+#autocorrelation
+xy.moran.plot <- spatialRF::moran_multithreshold(
+  x = x.values,
+  distance.matrix = xy.distance,
+  distance.thresholds = seq(0, 100, by = 10),
+  verbose = FALSE
+)$plot + 
+  theme_bw(base_size = 25) +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(hjust = 0.5)
+    ) +
+  scale_size_manual(
+    breaks = c("< 0.05", ">= 0.05"),
+    values = c(5, 10),
+    drop = FALSE
+  ) + 
+  labs(size = "p-value") + 
+  scale_y_continuous(limits = c(0, 1)) + 
+  scale_fill_viridis_c(option = "C")
+
+#plot map
+x.map <- ggplot(data = raster::as.data.frame(x, xy = TRUE)) + 
+  geom_tile(
+    aes(
+      x = x, 
+      y = y, 
+      fill = variable
+    )
+  ) + 
+  coord_fixed(expand = FALSE) + 
+  scale_fill_viridis_c(option = "C") + 
+  theme_bw(base_size = 25) + 
+  theme(
+    legend.position = "bottom", 
+    legend.key.width = unit(2,"cm"),
+    plot.title = element_text(hjust = 0.5)
+  ) + 
+  labs(
+    fill = "",
+    title = "Vegetation index (NDVI)",
+    x = "Longitude",
+    y = "Latitude"
+  )
+
+x.map | xy.moran.plot
+```
+
+
+---
+class: center middle
+
+```{r, fig.height=9, fig.width=12, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+#loading raster
+x <- raster::raster("data/accesibility.tif")
+names(x) <- "variable"
+
+#cropping to square
+new.extent <- raster::extent(
+  c(
+    xmin = extent(x)@xmax - (extent(x)@ymax - extent(x)@ymin),
+    xmax = extent(x)@xmax,
+    ymin = extent(x)@ymin,
+    ymax = extent(x)@ymax
+  )
+)
+
+x <- raster::crop(
+  x = x,
+  y = new.extent
+)
+
+#extracting values of the raster data
+x.values <- raster::extract(
+  x = x,
+  y = xy,
+  df = TRUE
+)[, 2]
+
+#autocorrelation
+xy.moran.plot <- spatialRF::moran_multithreshold(
+  x = x.values,
+  distance.matrix = xy.distance,
+  distance.thresholds = seq(0, 100, by = 10),
+  verbose = FALSE
+)$plot + 
+  theme_bw(base_size = 25) +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(hjust = 0.5)
+    ) +
+  scale_size_manual(
+    breaks = c("< 0.05", ">= 0.05"),
+    values = c(5, 10),
+    drop = FALSE
+  ) + 
+  labs(size = "p-value") + 
+  scale_y_continuous(limits = c(0, 1)) + 
+  scale_fill_viridis_c(option = "C")
+
+#plot map
+x.map <- ggplot(data = raster::as.data.frame(x, xy = TRUE)) + 
+  geom_tile(
+    aes(
+      x = x, 
+      y = y, 
+      fill = variable
+    )
+  ) + 
+  coord_fixed(expand = FALSE) + 
+  scale_fill_viridis_c(option = "C") + 
+  theme_bw(base_size = 25) + 
+  theme(
+    legend.position = "bottom", 
+    legend.key.width = unit(2,"cm"),
+    plot.title = element_text(hjust = 0.5)
+  ) + 
+  labs(
+    fill = "",
+    title = "Accesibility",
+    x = "Longitude",
+    y = "Latitude"
+  )
+
+x.map | xy.moran.plot
 ```
 
 ---
-class: center, middle
+class: center middle
 
-## Annual temperature
+```{r, fig.height=9, fig.width=12, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+#loading raster
+x <- raster::raster("data/human_footprint.tif")
+names(x) <- "variable"
 
-```{r echo=FALSE, out.height="60%", out.width= "100%"}
-knitr::include_graphics("figures/temperature.png")
+#cropping to square
+new.extent <- raster::extent(
+  c(
+    xmin = extent(x)@xmax - (extent(x)@ymax - extent(x)@ymin),
+    xmax = extent(x)@xmax,
+    ymin = extent(x)@ymin,
+    ymax = extent(x)@ymax
+  )
+)
+
+x <- raster::crop(
+  x = x,
+  y = new.extent
+)
+
+#extracting values of the raster data
+x.values <- raster::extract(
+  x = x,
+  y = xy,
+  df = TRUE
+)[, 2]
+
+#autocorrelation
+xy.moran.plot <- spatialRF::moran_multithreshold(
+  x = x.values,
+  distance.matrix = xy.distance,
+  distance.thresholds = seq(0, 100, by = 10),
+  verbose = FALSE
+)$plot + 
+  theme_bw(base_size = 25) +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(hjust = 0.5)
+    ) +
+  scale_size_manual(
+    breaks = c("< 0.05", ">= 0.05"),
+    values = c(5, 10),
+    drop = FALSE
+  ) + 
+  labs(size = "p-value") + 
+  scale_y_continuous(limits = c(0, 1)) + 
+  scale_fill_viridis_c(option = "C")
+
+#plot map
+x.map <- ggplot(data = raster::as.data.frame(x, xy = TRUE)) + 
+  geom_tile(
+    aes(
+      x = x, 
+      y = y, 
+      fill = variable
+    )
+  ) + 
+  coord_fixed(expand = FALSE) + 
+  scale_fill_viridis_c(option = "C") + 
+  theme_bw(base_size = 25) + 
+  theme(
+    legend.position = "bottom", 
+    legend.key.width = unit(2,"cm"),
+    plot.title = element_text(hjust = 0.5)
+  ) + 
+  labs(
+    fill = "",
+    title = "Human footprint",
+    x = "Longitude",
+    y = "Latitude"
+  )
+
+x.map | xy.moran.plot
 ```
 
----
-class: center, middle
-
-## Normalized vegetation index
-
-```{r echo=FALSE, out.height="60%", out.width= "100%"}
-knitr::include_graphics("figures/ndvi.png")
-```
 
 ---
-class: center, middle
+class: center middle
 
-## Accessibility
+```{r, fig.height=9, fig.width=12, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+#loading raster
+x <- raster::raster("data/slope.tif")
+names(x) <- "variable"
 
-```{r echo=FALSE, out.height="60%", out.width= "100%"}
-knitr::include_graphics("figures/accessibility.png")
-```
+#cropping to square
+new.extent <- raster::extent(
+  c(
+    xmin = extent(x)@xmax - (extent(x)@ymax - extent(x)@ymin),
+    xmax = extent(x)@xmax,
+    ymin = extent(x)@ymin,
+    ymax = extent(x)@ymax
+  )
+)
 
----
-class: center, middle
+x <- raster::crop(
+  x = x,
+  y = new.extent
+)
 
-## Human footprint
+#extracting values of the raster data
+x.values <- raster::extract(
+  x = x,
+  y = xy,
+  df = TRUE
+)[, 2]
 
-```{r echo=FALSE, out.height="60%", out.width= "100%"}
-knitr::include_graphics("figures/human_footprint.png")
-```
+#autocorrelation
+xy.moran.plot <- spatialRF::moran_multithreshold(
+  x = x.values,
+  distance.matrix = xy.distance,
+  distance.thresholds = seq(0, 100, by = 10),
+  verbose = FALSE
+)$plot + 
+  theme_bw(base_size = 25) +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(hjust = 0.5)
+    ) +
+  scale_size_manual(
+    breaks = c("< 0.05", ">= 0.05"),
+    values = c(5, 10),
+    drop = FALSE
+  ) + 
+  labs(size = "p-value") + 
+  scale_y_continuous(limits = c(0, 1)) + 
+  scale_fill_viridis_c(option = "C")
 
----
-class: center, middle
+#plot map
+x.map <- ggplot(data = raster::as.data.frame(x, xy = TRUE)) + 
+  geom_tile(
+    aes(
+      x = x, 
+      y = y, 
+      fill = variable
+    )
+  ) + 
+  coord_fixed(expand = FALSE) + 
+  scale_fill_viridis_c(option = "C") + 
+  theme_bw(base_size = 25) + 
+  theme(
+    legend.position = "bottom", 
+    legend.key.width = unit(2,"cm"),
+    plot.title = element_text(hjust = 0.5)
+  ) + 
+  labs(
+    fill = "",
+    title = "Topographic slope",
+    x = "Longitude",
+    y = "Latitude"
+  )
 
-## Topographic slope
-
-```{r echo=FALSE, out.height="60%", out.width= "100%"}
-knitr::include_graphics("figures/slope.png")
+x.map | xy.moran.plot
 ```
 
 ---
@@ -544,22 +981,103 @@ knitr::include_graphics("figures/cholera.jpg")
 ]
 
 ---
-class: middle center
+class: center
 
-# Abundance
+## Cholera map (John Snow<sup>1</sup>, 1854)
 
-<br>
+```{r echo=FALSE, out.width="60%", out.height="60%"}
+knitr::include_graphics("figures/cholera2.jpg")
+```
 
-.left[
+.small[
+.footnote[
+[1] Not *that* John Snow
+]
+]
 
-- Proximity among trees in a forest due to short distance dispersal.
+---
+class: center
+
+## Colony of Imperial cormorants <br> (*Leucocarbo atriceps*)
+
+
+```{r echo=FALSE, out.width="90%", out.height="60%"}
+knitr::include_graphics("figures/cormorants.jpeg")
+```
+
+.small[
+
+Source: [www.dailymail.co.uk](https://www.dailymail.co.uk/news/article-2982830/Amazing-photographs-thousands-nesting-Cormorants-gather-crowded-beach-annual-nesting-season.html)
 
 ]
 
 ---
-class: center, middle
+class: center
 
-# But spatial autocorrelation <br> also depends on how <br> we look at the world
+## Colony of Imperial cormorants <br> (*Leucocarbo atriceps*)
+
+
+```{r echo=FALSE, out.width="90%", out.height="60%"}
+knitr::include_graphics("figures/cormorants2.jpeg")
+```
+
+.small[
+
+Source: [www.dailymail.co.uk](https://www.dailymail.co.uk/news/article-2982830/Amazing-photographs-thousands-nesting-Cormorants-gather-crowded-beach-annual-nesting-season.html)
+
+]
+
+---
+class: center
+
+## *Quercus pyrenaica* forest
+
+
+```{r echo=FALSE, out.width="90%", out.height="60%"}
+knitr::include_graphics("figures/quercus.png")
+```
+
+---
+class: center
+
+## Mammal's richness
+
+
+```{r, fig.height=9, fig.width=13, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+ggplot(
+  data = raster::raster("data/mammals.tif") %>% 
+  raster::as.data.frame(xy = TRUE)
+  ) + 
+  geom_tile(
+    aes(
+      x = x, 
+      y = y, 
+      fill = mammals
+    )
+  ) + 
+  coord_fixed(expand = FALSE) + 
+  scale_fill_viridis_c(option = "C", direction = -1) + 
+  theme_bw(base_size = 25) + 
+  theme(
+    legend.position = "bottom", 
+    legend.key.width = unit(2,"cm"),
+    plot.title = element_text(hjust = 0.5)
+  ) + 
+  labs(
+    fill = "",
+    x = "Longitude",
+    y = "Latitude",
+    caption = "sedac.ciesin.columbia.edu"
+  )
+
+```
+
+---
+class: inverse middle center
+
+# HOW DO WE INCORPORATE <br> SPATIAL AUTOCORRELATION <br> INTO ML MODELS?
+
+
 
 ---
 class: center, middle
