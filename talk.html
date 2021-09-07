@@ -4,7 +4,7 @@
     <title>Autocorrelation   in spatial regression   with Machine Learning methods</title>
     <meta charset="utf-8" />
     <meta name="author" content="Blas M. Benito" />
-    <meta name="date" content="2021-09-06" />
+    <meta name="date" content="2021-09-07" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -34,7 +34,7 @@ class: center, middle, inverse, title-slide
 ## (with a focus on Random Forest)
 ### Blas M. Benito
 ### University of Alicante (Spain)
-### 2021-09-06
+### 2021-09-07
 
 ---
 
@@ -310,15 +310,184 @@ class: center
 ---
 class: center
 
+## *Quercus pyrenaica* forest
+
+
+&lt;img src="figures/quercus2.png" width="90%" height="60%" /&gt;
+
+
+---
+class: center
+
 ## Mammal's richness
 
 
-&lt;img src="talk_files/figure-html/unnamed-chunk-16-1.png" width="936" /&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-17-1.png" width="936" /&gt;
 
 ---
 class: inverse middle center
 
-# HOW DO WE INCORPORATE &lt;br&gt; SPATIAL AUTOCORRELATION &lt;br&gt; INTO ML MODELS?
+# ACCOUNTING FOR &lt;br&gt; SPATIAL AUTOCORRELATION &lt;br&gt; WITH RANDOM FOREST
+
+---
+class: middle center
+
+## SPATIAL PREDICTORS
+
+.medium[
+**Predictors representing distances among records**
+]
+
+.left[
+
+- Columns of the distance matrix
+- Eigenvectors of the distance matrix (also *eigenvector spatial filtering*)
+
+]
+
+---
+class: middle center
+
+## COLUMNS OF THE &lt;br&gt; DISTANCE MATRIX
+
+&lt;img src="figures/distancematrix.png" width="90%" height="60%" /&gt;
+
+---
+class: middle center
+
+## COLUMNS OF THE &lt;br&gt; DISTANCE MATRIX
+
+.small[Approach named **RFsp** (Hengl *et al.* 2018)]
+
+&lt;img src="figures/hengl.png" width="90%" height="60%" /&gt;
+
+---
+class: middle center
+
+## COLUMNS OF THE &lt;br&gt; DISTANCE MATRIX
+
+Authors compare **RFsp** with several alternatives
+
+&lt;img src="figures/rfsp1.png" width="90%" height="60%" /&gt;
+
+---
+class: middle center
+
+## COLUMNS OF THE &lt;br&gt; DISTANCE MATRIX
+
+Authors compare **RFsp** with several alternatives
+
+&lt;img src="figures/rfsp2.png" width="90%" height="60%" /&gt;
+
+
+---
+class: middle left
+
+## PROS
+
+- Easy to apply and understand
+- As good as geostatistics (kriging)
+- Removes spatial autocorrelation of model residuals
+- Importance scores of distance columns easy to interpret
+
+
+---
+class: middle left
+
+## CONS
+
+- Model training can be computationally expensive
+- Limit in number of records depends on the RAM memory available
+- Model is hard to generalize outside of the training universe (especially when the sampling is irregular)
+
+
+---
+class: middle center
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+.small[
+Case locations
+]
+
+&lt;img src="talk_files/figure-html/unnamed-chunk-22-1.png" width="50%" height="40%" /&gt;
+
+---
+class: middle center
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+.small[
+Distance matrix
+]
+
+&lt;img src="talk_files/figure-html/unnamed-chunk-23-1.png" width="60%" height="60%" /&gt;
+
+---
+class: middle center
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+.small[
+Matrix of weights
+]
+
+&lt;img src="talk_files/figure-html/unnamed-chunk-24-1.png" width="60%" height="60%" /&gt;
+
+---
+class: middle center
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+.small[
+Weights normalized by rowsums
+]
+
+&lt;img src="talk_files/figure-html/unnamed-chunk-25-1.png" width="65%" height="65%" /&gt;
+
+---
+class: middle center
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+.small[
+Double-centering
+]
+
+&lt;img src="talk_files/figure-html/unnamed-chunk-26-1.png" width="60%" height="60%" /&gt;
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+.small[
+Computation of normalized eigenvectors
+]
+
+&lt;img src="talk_files/figure-html/unnamed-chunk-27-1.png" width="100%" height="60%" /&gt;
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+.medium[
+Ranking eigenvectors with positive eigenvalue and Moran's I &gt; 0
+]
+
+&lt;img src="talk_files/figure-html/unnamed-chunk-28-1.png" width="100%" height="60%" /&gt;
+
+
+
+
+---
+class: middle center
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+&lt;img src="figures/eigenvectors.png" width="90%" height="60%" /&gt;
+
+
+
+
+
+
+
 
 
 
@@ -607,8 +776,8 @@ library(leaflet)
 leaflet() %&gt;% addTiles() %&gt;% setView(-93.65, 42.0285, zoom = 17)
 ```
 
-<div id="htmlwidget-5f7848d94569b3ac12cc" style="width:100%;height:432px;" class="leaflet html-widget"></div>
-<script type="application/json" data-for="htmlwidget-5f7848d94569b3ac12cc">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]}],"setView":[[42.0285,-93.65],17,[]]},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-923d037d181b1ab9c8fa" style="width:100%;height:432px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-923d037d181b1ab9c8fa">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]}],"setView":[[42.0285,-93.65],17,[]]},"evals":[],"jsHooks":[]}</script>
 
 ---
 
@@ -620,8 +789,8 @@ DT::datatable(
 )
 ```
 
-<div id="htmlwidget-57e8d944a7e1a90d7a2b" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-57e8d944a7e1a90d7a2b">{"x":{"filter":"none","fillContainer":false,"data":[["1","2","3","4","5","6","7","8","9","10"],[5.1,4.9,4.7,4.6,5,5.4,4.6,5,4.4,4.9],[3.5,3,3.2,3.1,3.6,3.9,3.4,3.4,2.9,3.1],[1.4,1.4,1.3,1.5,1.4,1.7,1.4,1.5,1.4,1.5],[0.2,0.2,0.2,0.2,0.2,0.4,0.3,0.2,0.2,0.1],["setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Sepal.Length<\/th>\n      <th>Sepal.Width<\/th>\n      <th>Petal.Length<\/th>\n      <th>Petal.Width<\/th>\n      <th>Species<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":8,"columnDefs":[{"className":"dt-right","targets":[1,2,3,4]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[8,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-78664ce8f31956cafab2" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-78664ce8f31956cafab2">{"x":{"filter":"none","fillContainer":false,"data":[["1","2","3","4","5","6","7","8","9","10"],[5.1,4.9,4.7,4.6,5,5.4,4.6,5,4.4,4.9],[3.5,3,3.2,3.1,3.6,3.9,3.4,3.4,2.9,3.1],[1.4,1.4,1.3,1.5,1.4,1.7,1.4,1.5,1.4,1.5],[0.2,0.2,0.2,0.2,0.2,0.4,0.3,0.2,0.2,0.1],["setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa","setosa"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Sepal.Length<\/th>\n      <th>Sepal.Width<\/th>\n      <th>Petal.Length<\/th>\n      <th>Petal.Width<\/th>\n      <th>Species<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":8,"columnDefs":[{"className":"dt-right","targets":[1,2,3,4]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[8,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
 
 ---
 

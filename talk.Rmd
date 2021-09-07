@@ -23,6 +23,7 @@ library(patchwork)
 library(gstat)
 library(raster)
 library(geosphere)
+library(reshape2)
 # remotes::install_github(
 #   repo = "blasbenito/spatialRF", 
 #   ref = "development",
@@ -1040,6 +1041,17 @@ knitr::include_graphics("figures/quercus.png")
 ---
 class: center
 
+## *Quercus pyrenaica* forest
+
+
+```{r echo=FALSE, out.width="90%", out.height="60%"}
+knitr::include_graphics("figures/quercus2.png")
+```
+
+
+---
+class: center
+
 ## Mammal's richness
 
 
@@ -1075,7 +1087,381 @@ ggplot(
 ---
 class: inverse middle center
 
-# HOW DO WE INCORPORATE <br> SPATIAL AUTOCORRELATION <br> INTO ML MODELS?
+# ACCOUNTING FOR <br> SPATIAL AUTOCORRELATION <br> WITH RANDOM FOREST
+
+---
+class: middle center
+
+## SPATIAL PREDICTORS
+
+.medium[
+**Predictors representing distances among records**
+]
+
+.left[
+
+- Columns of the distance matrix
+- Eigenvectors of the distance matrix (also *eigenvector spatial filtering*)
+
+]
+
+---
+class: middle center
+
+## COLUMNS OF THE <br> DISTANCE MATRIX
+
+```{r echo=FALSE, out.width="90%", out.height="60%"}
+knitr::include_graphics("figures/distancematrix.png")
+```
+
+---
+class: middle center
+
+## COLUMNS OF THE <br> DISTANCE MATRIX
+
+.small[Approach named **RFsp** (Hengl *et al.* 2018)]
+
+```{r echo=FALSE, out.width="90%", out.height="60%"}
+knitr::include_graphics("figures/hengl.png")
+```
+
+---
+class: middle center
+
+## COLUMNS OF THE <br> DISTANCE MATRIX
+
+Authors compare **RFsp** with several alternatives
+
+```{r echo=FALSE, out.width="90%", out.height="60%"}
+knitr::include_graphics("figures/rfsp1.png")
+```
+
+---
+class: middle center
+
+## COLUMNS OF THE <br> DISTANCE MATRIX
+
+Authors compare **RFsp** with several alternatives
+
+```{r echo=FALSE, out.width="90%", out.height="60%"}
+knitr::include_graphics("figures/rfsp2.png")
+```
+
+
+---
+class: middle left
+
+## PROS
+
+- Easy to apply and understand
+- As good as geostatistics (kriging)
+- Removes spatial autocorrelation of model residuals
+- Importance scores of distance columns easy to interpret
+
+
+---
+class: middle left
+
+## CONS
+
+- Model training can be computationally expensive
+- Limit in number of records depends on the RAM memory available
+- Model is hard to generalize outside of the training universe (especially when the sampling is irregular)
+
+
+---
+class: middle center
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+.small[
+Case locations
+]
+
+```{r echo=FALSE, out.width="50%", out.height="40%"}
+#creating the pairs of coordinates
+xy <- expand.grid(
+  x = 1:5,
+  y = 1:5
+)
+
+ggplot(data = xy) + 
+  aes(
+    x = x,
+    y = y
+  ) + 
+  geom_point(color = "#f1605d", size = 10) + 
+  theme_bw(base_size = 30) + 
+  coord_fixed()
+```
+
+---
+class: middle center
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+.small[
+Distance matrix
+]
+
+```{r echo=FALSE, out.width="60%", out.height="60%"}
+#creating the distance matrix
+xy.distances <- dist(
+  xy, 
+  diag = TRUE, 
+  upper = TRUE
+  ) %>% 
+  as.matrix()
+
+ggplot(data = reshape2::melt(xy.distances)) + 
+  aes(
+    x = Var1,
+    y = Var2,
+    fill = value
+  ) + 
+  geom_tile() + 
+  theme_bw(base_size = 20) + 
+  scale_fill_viridis_c(option = "C", direction = -1) + 
+  coord_fixed(expand = FALSE) + 
+  labs(fill = "Distance", x = "Observation", y = "Observation") +
+  theme(plot.margin = unit(c(0,0,3,0),"cm"))
+```
+
+---
+class: middle center
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+.small[
+Matrix of weights
+]
+
+```{r echo=FALSE, out.width="60%", out.height="60%"}
+#thresholdding and weights
+xy.distances[xy.distances <= 1] <- 1
+diag(xy.distances) <- NA
+xy.weights <- 1/xy.distances
+
+ggplot(data = reshape2::melt(xy.weights)) + 
+  aes(
+    x = Var1,
+    y = Var2,
+    fill = value
+  ) + 
+  geom_tile() + 
+  theme_bw(base_size = 20) + 
+  scale_fill_viridis_c(option = "C", direction = -1) + 
+  coord_fixed(expand = FALSE) + 
+  labs(fill = "Weight", x = "Observation", y = "Observation") +
+  theme(plot.margin = unit(c(0,0,3,0),"cm"))
+```
+
+---
+class: middle center
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+.small[
+Weights normalized by rowsums
+]
+
+```{r echo=FALSE, out.width="65%", out.height="65%"}
+#normalizing weights
+xy.weights.rowsums <- rowSums(
+  xy.weights,
+  na.rm = TRUE
+  )
+xy.weights <- xy.weights/xy.weights.rowsums
+
+#removing Inf
+xy.weights[xy.weights == Inf] <- 0
+
+#adding zero to diagonals
+diag(xy.weights) <- 0
+
+ggplot(data = reshape2::melt(xy.weights)) + 
+  aes(
+    x = Var1,
+    y = Var2,
+    fill = value
+  ) + 
+  geom_tile() + 
+  theme_bw(base_size = 20) + 
+  scale_fill_viridis_c(option = "C", direction = -1) + 
+  coord_fixed(expand = FALSE) + 
+  labs(fill = "Normalized \n weight", x = "Observation", y = "Observation") +
+  theme(plot.margin = unit(c(0,0,3,0),"cm"))
+```
+
+---
+class: middle center
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+.small[
+Double-centering
+]
+
+```{r echo=FALSE, out.width="60%", out.height="60%"}
+#double centering weights matrix
+
+#compute row means
+xy.weights.row.means <- xy.weights*0 + rowMeans(xy.weights)
+
+#compute col means
+xy.weights.col.means <- t(xy.weights*0 + colMeans(xy.weights))
+
+#double centering
+xy.weights.double.centered <- (xy.weights - xy.weights.row.means - xy.weights.col.means + mean(xy.weights[]))
+
+#adding zero to diagonals
+diag(xy.weights.double.centered) <- 0
+
+ggplot(data = reshape2::melt(xy.weights.double.centered)) + 
+  aes(
+    x = Var1,
+    y = Var2,
+    fill = value
+  ) + 
+  geom_tile() + 
+  theme_bw(base_size = 20) + 
+  scale_fill_viridis_c(option = "C", direction = -1) + 
+  coord_fixed(expand = FALSE) + 
+  labs(fill = "Double \n centered \n weights", x = "Observation", y = "Observation") +
+  theme(plot.margin = unit(c(0,0,3,0),"cm"))
+```
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+.small[
+Computation of normalized eigenvectors
+]
+
+```{r echo=FALSE, out.width="100%", out.height="60%"}
+#eigenvalues and eigenvectors
+xy.eigen <- eigen(
+  xy.weights.double.centered,
+  symmetric = TRUE
+)
+
+ggplot(data = cbind(
+  xy, 
+  xy.eigen$vectors
+  ) %>% 
+    tidyr::pivot_longer(
+      cols = 3:27, 
+      names_to = "eigenvector",
+      values_to = "value"
+      ) %>% 
+    dplyr::mutate(eigenvector = factor(eigenvector, levels = as.character(1:25)))
+  ) + 
+  aes(
+    x = x,
+    y = y, 
+    fill = value,
+    group = eigenvector
+  ) +
+  facet_wrap("eigenvector", ncol = 7) + 
+  geom_tile() + 
+  coord_cartesian(expand = FALSE) + 
+  scale_fill_gradient2(
+    midpoint = 0, 
+    low = "#fba437", 
+    mid = "white", 
+    high = "#131789"
+    ) + 
+  labs(x = "", y = "", fill = "Value") + 
+  theme(strip.background = element_rect(colour = "black", fill = "white")) + 
+  theme_bw(base_size = 20) +
+  theme(plot.margin = unit(c(0,0,3,0),"cm"))
+```
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+.medium[
+Ranking eigenvectors with positive eigenvalue and Moran's I > 0
+]
+
+```{r echo=FALSE, out.width="100%", out.height="60%"}
+#normalize eigenvalues
+xy.eigenvalues <- xy.eigen$values/max(abs(xy.eigen$values))
+
+#get positive mem (all of them have positive values)
+xy.positive.eigenvectors <- as.data.frame(xy.eigen$vectors[, which(xy.eigenvalues > 0)])
+
+#rank by Moran's I
+xy.selected.eigenvectors <- spatialRF::rank_spatial_predictors(
+  distance.matrix = xy.distances,
+  distance.thresholds = 0,
+  spatial.predictors.df = xy.positive.eigenvectors,
+  ranking.method = "moran"
+  )
+
+#preparing plotting dataframe
+plot.df <- cbind(
+  xy, 
+  xy.selected.eigenvectors$spatial.predictors.df
+  ) 
+colnames(plot.df) <- c(
+  "x", "y", 
+  paste0(
+    "Moran's I = ", 
+    round(xy.selected.eigenvectors$criteria$ranking.criteria, 3)
+    )
+  )
+
+plot.df <- plot.df %>% 
+  tidyr::pivot_longer(
+      cols = 3:7, 
+      names_to = "eigenvector",
+      values_to = "value"
+      ) %>% 
+    dplyr::mutate(eigenvector = factor(eigenvector, levels = paste0(
+    "Moran's I = ", 
+    round(xy.selected.eigenvectors$criteria$ranking.criteria, 3)
+    )))
+
+ggplot(data = plot.df
+  ) + 
+  aes(
+    x = x,
+    y = y, 
+    fill = value,
+    group = eigenvector
+  ) +
+  facet_wrap("eigenvector", ncol = 3) + 
+  geom_tile() + 
+  coord_cartesian(expand = FALSE) + 
+  scale_fill_gradient2(
+    midpoint = 0, 
+    low = "#fba437", 
+    mid = "white", 
+    high = "#131789"
+    ) + 
+  labs(x = "", y = "", fill = "Value") + 
+  theme(strip.background = element_rect(colour = "black", fill = "white")) + 
+  theme_bw(base_size = 20) +
+  theme(plot.margin = unit(c(0,0,3,0),"cm"))
+```
+
+
+
+
+---
+class: middle center
+
+## EIGENVECTORS OF THE DISTANCE MATRIX
+
+```{r echo=FALSE, out.width="90%", out.height="60%"}
+knitr::include_graphics("figures/eigenvectors.png")
+```
+
+
+
+
+
+
+
 
 
 
