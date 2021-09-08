@@ -118,8 +118,10 @@ ul li::before {
 # Availability
 
 .small[
-Slideshow + code + data are available at <br>
+Github repo with slideshow + code + data are available at <br>
 [https://github.com/BlasBenito/spatialRF_talk](https://github.com/BlasBenito/spatialRF_talk)
+
+Slideshow link: [https://blasbenito.github.io/spatialRF_talk/talk.html](https://blasbenito.github.io/spatialRF_talk/talk.html)
 ]
 
 ```{r echo=FALSE, out.height="60%", fig.retina = 2, out.width= "80%"}
