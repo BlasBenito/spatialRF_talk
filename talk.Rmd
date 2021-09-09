@@ -136,9 +136,11 @@ ul li::before {
 
 .left[
 .small[
-Github repo: [BlasBenito/spatialRF_talk](https://github.com/BlasBenito/spatialRF_talk)
 
 Live slideshow: [https://blasbenito.github.io/spatialRF_talk/talk.html](https://blasbenito.github.io/spatialRF_talk/talk.html)
+
+Github repo: [BlasBenito/spatialRF_talk](https://github.com/BlasBenito/spatialRF_talk)
+
 ]
 ]
 
@@ -166,6 +168,10 @@ Everything is usually related to all else, but those which are near to each othe
 <br>
 
 .content-box[Similarity depends on distance]
+
+<br>
+.medium[We call it **spatial autocorrelation** (SAC)]
+
 
 ---
 class: center
@@ -316,7 +322,7 @@ patchwork::wrap_plots(
   ),
   ncol = 3
 ) + plot_annotation(
-  title = "Moran's I",
+  title = "Quantifying autocorrelation with Moran's I",
   theme = theme(
     plot.margin = unit(c(2,0,2,0),"cm"), 
     text = element_text(size = 35), 
@@ -537,11 +543,7 @@ How?: **Eigenvectors of a neighborhood matrix**
 ---
 class: middle center
 
-### EIGENVECTORS
-
-.small[
-A good paper to start:
-]
+### A GOOD PAPER TO START
 
 ```{r echo=FALSE, out.height="60%", fig.retina = 2, out.width= "100%"}
 knitr::include_graphics("figures/paper.png")
@@ -856,19 +858,19 @@ library(spatialRF)
 ---
 class: middle left
 
-## Example data
+## EXAMPLE DATA
 
 .pull-left[
 .tiny[
 - **Response variable**: plant richness of the American ecoregions
-- **14 predictors** (climate, topography,  human impact, etc)
+- **14 predictors** (climate, fragmentation, human impact, etc)
 - **Distance matrix** among the ecoregion polygons (centroids shown in the figure)
 ]
 ]
 
 .pull-right[
 
-```{r, echo = FALSE, fig.retina=2, fig.width=10, fig.height=10, out.width="100%"}
+```{r, echo = FALSE, fig.retina=2, out.width="100%", out.height = "100%"}
 world <- rnaturalearth::ne_countries(
   scale = "medium", 
   returnclass = "sf"
@@ -900,8 +902,8 @@ ggplot2::ggplot() +
   ggplot2::ylab("Latitude") +
   theme(
     legend.position = "bottom", 
-    plot.margin = unit(c(0,0,3,0),"cm"),
-    legend.key.size = unit(2, "cm")
+    plot.margin = unit(c(0,0,0,0),"cm"),
+    legend.key.width = unit(2, "cm")
     )
 ```
 
@@ -910,7 +912,7 @@ ggplot2::ggplot() +
 ---
 class: middle left
 
-### SETUP
+### MODELLING SETUP
 
 .left[
 .small[
@@ -939,25 +941,25 @@ predictor.names <- c(
   "fragmentation_division"
   )
 
-#case coordinates
-xy <- plant_richness_df[, c("x", "y")]
-
 #distance thresholds in km
 distance.thresholds <- c(50, 500, 5000)
-
-#random seed for reproducibility
-random.seed <- 1
 ```
 ]
 ]
 
+```{r, include = FALSE, echo = FALSE}
+#random seed for reproducibility
+random.seed <- 1
+```
+
+
 ---
 class: middle left
 
-### Fitting the models
+### FITTING THE MODELS
 
 .medium[
-```{r, eval = TRUE, results = "hide", fig.show='hide'}
+```{r, eval = TRUE, results = "hide", message = FALSE, warning = FALSE, error = FALSE, fig.show='hide'}
 #non-spatial model, predictors only
 model.non.spatial <- spatialRF::rf(
   data = plant_richness_df,
@@ -978,7 +980,7 @@ model.spatial <- spatialRF::rf_spatial(
 ---
 class: middle left
 
-.center[## Comparing the models with spatial cross-validation]
+## COMPARING THE MODELS WITH SPATIAL CROSS-VALIDATION
 
 .pull-left[
 .small[
@@ -989,7 +991,7 @@ model.comparison <- spatialRF::rf_compare(
     model.non.spatial = model.non.spatial,
     model.spatial = model.spatial
   ),
-  xy = xy,
+  xy = plant_richness_df[, c("x", "y")],
   repetitions = 100,
   metrics = "rmse"
 )
@@ -999,7 +1001,7 @@ model.comparison <- spatialRF::rf_compare(
 
 .pull-right[
 ```{r, echo = FALSE, fig.retina=2, fig.width=10, fig.height=10, out.width="100%"}
-plot.df <- xy
+plot.df <- plant_richness_df[, c("x", "y")]
 plot.df$group.2 <- plot.df$group.1 <- "Training"
 plot.df[model.comparison$spatial.folds[[1]]$testing, "group.1"] <- "Testing"
 
@@ -1036,7 +1038,7 @@ ggplot2::ggplot() +
 ---
 class: middle center
 
-## Model comparison
+## MODEL COMPARISON
 <br>
 
 ```{r, echo = FALSE}
@@ -1053,10 +1055,6 @@ comparison.df <- data.frame(
     model.non.spatial$residuals$autocorrelation$per.distance$moran.i[1],
     model.spatial$residuals$autocorrelation$per.distance$moran.i[1]
   ),
-  intrinsic.rmse = c(
-    model.non.spatial$performance$rmse,
-    model.spatial$performance$rmse
-  ),
   extrinsic.rmse = c(
     median(
       model.comparison$comparison.df %>% dplyr::filter(model == "model.non.spatial") %>% dplyr::select(value) %>% 
@@ -1070,14 +1068,13 @@ comparison.df <- data.frame(
 ) %>% 
   dplyr::mutate(
     moran.i.residuals = round(moran.i.residuals, 2),
-    intrinsic.rmse = round(intrinsic.rmse, 0),
     extrinsic.rmse = round(extrinsic.rmse, 0)
   )
 
 kableExtra::kbl(
   comparison.df, 
   format = 'html',
-  col.names = c("Model", "spatial predictors", "Moran's I of residuals", "RMSE oob", "RMSE spatial cv")
+  col.names = c("Model", "spatial predictors", "Moran's I of residuals", "RMSE spatial cv")
   )
 ```
 
@@ -1085,7 +1082,7 @@ kableExtra::kbl(
 ---
 class: middle center
 
-## Variable importance 
+## VARIABLE IMPORTANCE
 
 ```{r, fig.width=10, fig.height=7, out.width="120%", fig.retina = 2, out.height="60%", message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
 
@@ -1093,10 +1090,7 @@ importance.df <- rbind(
   model.non.spatial$importance$per.variable %>% 
   dplyr::mutate(model = "Non spatial"),
    model.spatial$importance$spatial.predictors %>% 
-  dplyr::mutate(
-    model = "Spatial",
-    variable = ifelse(variable == "spatial_predictors", "spatial_predictors_mem", variable)
-    )
+  dplyr::mutate(model = "Spatial")
 ) %>% 
   dplyr::arrange(desc(importance))
 
@@ -1129,7 +1123,7 @@ ggplot(data = importance.df) +
 ---
 class: middle center
 
-## Importance of spatial predictors
+## IMPORTANCE OF SPATIAL PREDICTORS
 
 ```{r, fig.width=10, fig.height=7, out.width="120%", fig.retina = 2, out.height="60%", message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
 
@@ -1166,7 +1160,7 @@ ggplot(data = importance.df) +
 ---
 class: middle center
 
-## Response curves
+## RESPONSE CURVES
 
 ```{r, fig.width=10, fig.height=7, out.width="120%", fig.retina = 2, out.height="60%", message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
 variables <- c("human_population", "climate_bio1_average", "climate_hypervolume", "bias_area_km2")
@@ -1193,7 +1187,7 @@ ggplot(data = plot.df) +
     color = model
   ) + 
   geom_path(size = 1) + 
-  facet_wrap("predictor.name", scales = "free_x", ncol = 2) + 
+  facet_wrap("predictor.name", scales = "free", ncol = 2) + 
   theme_bw(base_size = 20) +
     labs(
     y = "Richness of vascular plants", 
@@ -1213,10 +1207,10 @@ class: middle left
 ## A FEW IDEAS
 
 
-- **Spatial predictors** reduce SAC in model residuals (**GOOD**)
-- **Spatial predictors** hinder model transferability (**KINDA BAD**)
-- **Eigenvectors**: Outcome similar to base model, plus information about the importance of spatial processes (**GOOD**)
-- Computational demands limit sample size
+- **Spatial predictors** reduce SAC in model residuals
+- **Spatial predictors** hinder model transferability
+- **Eigenvectors**: Outcome similar to base model, plus information about the importance of spatial processes
+- Computational demands limit sample size (1000 to 5000, depending on the available RAM)
 
 ---
 class: middle center
@@ -1224,7 +1218,7 @@ class: middle center
 ## FINAL MESSAGE
 
 .medium[
-Incorporating **eigenvectors of the distance matrix** into spatial analyses might improve understanding on underlying spatial processes not represented by the covariates.
+Incorporating spatial predictors into machine learning models might help unveil underlying spatial processes not represented by the covariates.
 ]
 
 ---

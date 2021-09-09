@@ -119,9 +119,11 @@ ul li::before {
 
 .left[
 .small[
-Github repo: [BlasBenito/spatialRF_talk](https://github.com/BlasBenito/spatialRF_talk)
 
 Live slideshow: [https://blasbenito.github.io/spatialRF_talk/talk.html](https://blasbenito.github.io/spatialRF_talk/talk.html)
+
+Github repo: [BlasBenito/spatialRF_talk](https://github.com/BlasBenito/spatialRF_talk)
+
 ]
 ]
 
@@ -147,6 +149,10 @@ Everything is usually related to all else, but those which are near to each othe
 &lt;br&gt;
 
 .content-box[Similarity depends on distance]
+
+&lt;br&gt;
+.medium[We call it **spatial autocorrelation** (SAC)]
+
 
 ---
 class: center
@@ -240,11 +246,7 @@ How?: **Eigenvectors of a neighborhood matrix**
 ---
 class: middle center
 
-### EIGENVECTORS
-
-.small[
-A good paper to start:
-]
+### A GOOD PAPER TO START
 
 &lt;img src="figures/paper.png" width="100%" height="60%" /&gt;
 
@@ -359,26 +361,26 @@ library(spatialRF)
 ---
 class: middle left
 
-## Example data
+## EXAMPLE DATA
 
 .pull-left[
 .tiny[
 - **Response variable**: plant richness of the American ecoregions
-- **14 predictors** (climate, topography,  human impact, etc)
+- **14 predictors** (climate, fragmentation, human impact, etc)
 - **Distance matrix** among the ecoregion polygons (centroids shown in the figure)
 ]
 ]
 
 .pull-right[
 
-&lt;img src="talk_files/figure-html/unnamed-chunk-19-1.png" width="100%" /&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-19-1.png" width="100%" height="100%" /&gt;
 
 ]
 
 ---
 class: middle left
 
-### SETUP
+### MODELLING SETUP
 
 .left[
 .small[
@@ -408,22 +410,19 @@ predictor.names &lt;- c(
   "fragmentation_division"
   )
 
-#case coordinates
-xy &lt;- plant_richness_df[, c("x", "y")]
-
 #distance thresholds in km
 distance.thresholds &lt;- c(50, 500, 5000)
-
-#random seed for reproducibility
-random.seed &lt;- 1
 ```
 ]
 ]
 
+
+
+
 ---
 class: middle left
 
-### Fitting the models
+### FITTING THE MODELS
 
 .medium[
 
@@ -445,32 +444,12 @@ model.spatial &lt;- spatialRF::rf_spatial(
   method = "mem.moran.sequential"
 )
 ```
-
-```
-## The model residuals are spatially correlated, fitting a spatial model.
-```
-
-```
-## Using Moran's Eigenvector Maps as spatial predictors.
-```
-
-```
-## Ranking spatial predictors by their Moran's I.
-```
-
-```
-## Sequential selection of spatial predictors.
-```
-
-```
-## Details about the spatial predictors stored in model$spatial.
-```
 ]
 
 ---
 class: middle left
 
-.center[## Comparing the models with spatial cross-validation]
+## COMPARING THE MODELS WITH SPATIAL CROSS-VALIDATION
 
 .pull-left[
 .small[
@@ -482,7 +461,7 @@ model.comparison &lt;- spatialRF::rf_compare(
     model.non.spatial = model.non.spatial,
     model.spatial = model.spatial
   ),
-  xy = xy,
+  xy = plant_richness_df[, c("x", "y")],
   repetitions = 100,
   metrics = "rmse"
 )
@@ -491,13 +470,13 @@ model.comparison &lt;- spatialRF::rf_compare(
 ]
 
 .pull-right[
-&lt;img src="talk_files/figure-html/unnamed-chunk-23-1.png" width="100%" /&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-24-1.png" width="100%" /&gt;
 ]
 
 ---
 class: middle center
 
-## Model comparison
+## MODEL COMPARISON
 &lt;br&gt;
 
 &lt;table&gt;
@@ -506,7 +485,6 @@ class: middle center
    &lt;th style="text-align:left;"&gt; Model &lt;/th&gt;
    &lt;th style="text-align:right;"&gt; spatial predictors &lt;/th&gt;
    &lt;th style="text-align:right;"&gt; Moran's I of residuals &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; RMSE oob &lt;/th&gt;
    &lt;th style="text-align:right;"&gt; RMSE spatial cv &lt;/th&gt;
   &lt;/tr&gt;
  &lt;/thead&gt;
@@ -515,14 +493,12 @@ class: middle center
    &lt;td style="text-align:left;"&gt; Non spatial &lt;/td&gt;
    &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
    &lt;td style="text-align:right;"&gt; 0.15 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 1024 &lt;/td&gt;
    &lt;td style="text-align:right;"&gt; 3104 &lt;/td&gt;
   &lt;/tr&gt;
   &lt;tr&gt;
    &lt;td style="text-align:left;"&gt; Spatial &lt;/td&gt;
    &lt;td style="text-align:right;"&gt; 18 &lt;/td&gt;
    &lt;td style="text-align:right;"&gt; 0.03 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 978 &lt;/td&gt;
    &lt;td style="text-align:right;"&gt; 3514 &lt;/td&gt;
   &lt;/tr&gt;
 &lt;/tbody&gt;
@@ -532,24 +508,24 @@ class: middle center
 ---
 class: middle center
 
-## Variable importance 
-
-&lt;img src="talk_files/figure-html/unnamed-chunk-25-1.png" width="120%" height="60%" /&gt;
-
----
-class: middle center
-
-## Importance of spatial predictors
+## VARIABLE IMPORTANCE
 
 &lt;img src="talk_files/figure-html/unnamed-chunk-26-1.png" width="120%" height="60%" /&gt;
 
+---
+class: middle center
+
+## IMPORTANCE OF SPATIAL PREDICTORS
+
+&lt;img src="talk_files/figure-html/unnamed-chunk-27-1.png" width="120%" height="60%" /&gt;
+
 
 ---
 class: middle center
 
-## Response curves
+## RESPONSE CURVES
 
-&lt;img src="talk_files/figure-html/unnamed-chunk-27-1.png" width="120%" height="60%" /&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-28-1.png" width="120%" height="60%" /&gt;
 
 ---
 class: middle left
@@ -557,10 +533,10 @@ class: middle left
 ## A FEW IDEAS
 
 
-- **Spatial predictors** reduce SAC in model residuals (**GOOD**)
-- **Spatial predictors** hinder model transferability (**KINDA BAD**)
-- **Eigenvectors**: Outcome similar to base model, plus information about the importance of spatial processes (**GOOD**)
-- Computational demands limit sample size
+- **Spatial predictors** reduce SAC in model residuals
+- **Spatial predictors** hinder model transferability
+- **Eigenvectors**: Outcome similar to base model, plus information about the importance of spatial processes
+- Computational demands limit sample size (1000 to 5000, depending on the available RAM)
 
 ---
 class: middle center
@@ -568,7 +544,7 @@ class: middle center
 ## FINAL MESSAGE
 
 .medium[
-Incorporating **eigenvectors of the distance matrix** into spatial analyses might improve understanding on underlying spatial processes not represented by the covariates.
+Incorporating spatial predictors into machine learning models might help unveil underlying spatial processes not represented by the covariates.
 ]
 
 ---
