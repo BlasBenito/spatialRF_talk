@@ -1,4 +1,4 @@
-moran <- function(
+moran_custom <- function(
   x = NULL,
   distance.matrix = NULL,
   distance.threshold = NULL,
@@ -75,7 +75,7 @@ moran <- function(
       level = 0.99
     ) +
     ggplot2::xlab("Value") +
-    ggplot2::ylab("Lagged value") +
+    ggplot2::ylab("Weighted value of neighbors") +
     ggplot2::theme(
       legend.position = "none", 
       plot.margin = ggplot2::margin(t = 0, r = 0, b = 0, l = 0),
@@ -83,7 +83,8 @@ moran <- function(
       ) +
     ggplot2::ggtitle(plot.title) +
     ggplot2::theme_bw(base_size = 10) + 
-    ggplot2::coord_fixed(xlim = c(0, 1), ylim = c(0, 1))
+    ggplot2::coord_fixed(xlim = c(0, 1), ylim = c(0, 1)) + 
+    theme_bw(base_size = 25)
   
   moran.plot
 

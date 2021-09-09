@@ -1,6 +1,5 @@
 ---
-title: "Autocorrelation <br> in spatial regression <br> with Machine Learning methods"
-subtitle: "(with a focus on Random Forest)"
+title: "Autocorrelation <br> in spatial regression <br> with Random Forest"
 author: "Blas M. Benito"
 institute: "University of Alicante (Spain)"
 date: "`r Sys.Date()`"
@@ -26,17 +25,11 @@ library(geosphere)
 library(reshape2)
 library(rnaturalearth)
 library(kableExtra)
-# remotes::install_github(
-#   repo = "blasbenito/spatialRF", 
-#   ref = "development",
-#   force = TRUE,
-#   quiet = TRUE
-#   )
+remotes::install_github(
+  repo = "blasbenito/spatialRF",
+  ref = "development"
+  )
 library(spatialRF)
-```
-
-
-```{r functions, include=FALSE, warning=FALSE}
 source("functions.R")
 ```
 
@@ -141,14 +134,15 @@ ul li::before {
 
 # Availability
 
+.left[
 .small[
-Github repo: <br>
-[https://github.com/BlasBenito/spatialRF_talk](https://github.com/BlasBenito/spatialRF_talk)
+Github repo: [BlasBenito/spatialRF_talk](https://github.com/BlasBenito/spatialRF_talk)
 
 Live slideshow: [https://blasbenito.github.io/spatialRF_talk/talk.html](https://blasbenito.github.io/spatialRF_talk/talk.html)
 ]
+]
 
-```{r echo=FALSE, out.height="45%", fig.retina = 2, out.width= "80%"}
+```{r echo=FALSE, out.height="40%", fig.retina = 2, out.width= "70%"}
 knitr::include_graphics("figures/github.png")
 ```
 
@@ -174,40 +168,9 @@ Everything is usually related to all else, but those which are near to each othe
 .content-box[Similarity depends on distance]
 
 ---
-class: middle center
-
-.content-box[Similarity depends on distance]
-
-<br>
-
-.left[
-
-- Effect measured as **spatial autocorrelation** (**SAC**)
-- Measured over one or several reference distances
-- High similarity over distance: **positive SAC**
-- Low similarity over distance: **negative SAC**
-- Most popular metric of **SAC** is **Moran's I**
-
-]
-
----
-class: middle center
-
-## Moran's I
-
-.left[
-
-- Slope of record's values versus the distance-weighted values of their neighbors.
-- Range between -1 and 1
-- Higher than zero: **positive SAC**
-- Lower than zero: **negative SAC**
-
-]
-
----
 class: center
 
-```{r, out.width="120%", fig.retina = 2, out.height="60%", message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+```{r, fig.height=13, fig.width=17, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
 
 set.seed(1)
 
@@ -247,7 +210,7 @@ xy.positive.matrix <- ggplot(data = xy.positive) +
   geom_tile() + 
   coord_fixed(expand = FALSE) + 
   scale_fill_viridis_c(option = "C", direction = -1) + 
-  theme_bw() + 
+  theme_bw(base_size = 25) + 
   labs(x = "", y = "") + 
   theme(
     legend.position = "none", 
@@ -256,7 +219,7 @@ xy.positive.matrix <- ggplot(data = xy.positive) +
   ggtitle("1")
 
 #moran
-xy.positive.moran <- moran(
+xy.positive.moran <- moran_custom(
   x = xy.positive$sim1,
   distance.matrix = xy.distance,
   distance.threshold = 1
@@ -292,7 +255,7 @@ xy.neutral.matrix <- ggplot(data = xy.neutral) +
   geom_tile() + 
   coord_fixed(expand = FALSE) + 
   scale_fill_viridis_c(option = "C", direction = -1) + 
-  theme_bw() + 
+  theme_bw(base_size = 25) + 
   labs(x = "", y = "") + 
   theme(
     legend.position = "none", 
@@ -301,7 +264,7 @@ xy.neutral.matrix <- ggplot(data = xy.neutral) +
   ggtitle("2")
 
 #moran
-xy.neutral.moran <- moran(
+xy.neutral.moran <- moran_custom(
   x = xy.neutral$sim1,
   distance.matrix = xy.distance,
   distance.threshold = 1
@@ -326,7 +289,7 @@ xy.negative.matrix <- ggplot(data = xy.negative) +
   geom_tile() + 
   coord_fixed(expand = FALSE) + 
   scale_fill_viridis_c(option = "C", direction = -1) + 
-  theme_bw() + 
+  theme_bw(base_size = 25) + 
   labs(x = "", y = "") + 
   theme(
     legend.position = "none", 
@@ -335,7 +298,7 @@ xy.negative.matrix <- ggplot(data = xy.negative) +
   ggtitle("3")
 
 #moran
-xy.negative.moran <- moran(
+xy.negative.moran <- moran_custom(
   x = xy.negative$sim1,
   distance.matrix = xy.distance,
   distance.threshold = 1
@@ -352,7 +315,14 @@ patchwork::wrap_plots(
     xy.negative.moran
   ),
   ncol = 3
-) + plot_annotation(theme = theme(plot.margin = unit(c(0,0,3,0),"cm")))
+) + plot_annotation(
+  title = "Moran's I",
+  theme = theme(
+    plot.margin = unit(c(2,0,2,0),"cm"), 
+    text = element_text(size = 35), 
+    plot.title = element_text(hjust = 0.5)
+    )
+  )
 
 ```
 
@@ -475,522 +445,18 @@ xy.df.plot + inset_element(
 ```
 ```{r, include = FALSE}
 #removing objects we don't need
-rm(fit, model.neutral, model.positive, xy, xy.df, xy.df.plot, xy.distance, xy.negative, xy.negative.df, xy.negative.matrix, xy.negative.moran, xy.neutral, xy.neutral.df, xy.neutral.matrix, xy.neutral.moran, xy.positive, xy.positive.df, xy.positive.matrix, xy.positive.moran, dojutsu)
+rm(model.neutral, model.positive, xy.df, xy.df.plot, xy.negative, xy.negative.df, xy.negative.matrix, xy.negative.moran, xy.neutral, xy.neutral.df, xy.neutral.matrix, xy.neutral.moran, xy.positive, xy.positive.df, xy.positive.matrix, xy.positive.moran)
 ```
 
-
----
-class: center middle
-
-# Most spatial variables <br> show <br> spatial autocorrelation
-
----
-class: center middle
-
-```{r, fig.height=9, fig.width=12, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
-#loading raster
-x <- raster::raster("data/aridity.tif")
-names(x) <- "variable"
-
-#cropping to square
-new.extent <- raster::extent(
-  c(
-    xmin = extent(x)@xmax - (extent(x)@ymax - extent(x)@ymin),
-    xmax = extent(x)@xmax,
-    ymin = extent(x)@ymin,
-    ymax = extent(x)@ymax
-  )
-)
-
-x <- raster::crop(
-  x = x,
-  y = new.extent
-)
-
-#regular grid over raster file
-xy <- raster::sampleRegular(
-  x = x, 
-  size = 1000,
-  xy = TRUE
-  ) %>% 
-  as.data.frame() %>% 
-  dplyr::select(x, y)
-
-#distance matrix
-xy.distance <- geosphere::distm(as.matrix(xy), fun = distGeo) / 1000
-
-#extracting values of the raster data
-x.values <- raster::extract(
-  x = x,
-  y = xy,
-  df = TRUE
-)[, 2]
-
-#autocorrelation
-xy.moran.plot <- spatialRF::moran_multithreshold(
-  x = x.values,
-  distance.matrix = xy.distance,
-  distance.thresholds = seq(0, 100, by = 10),
-  verbose = FALSE
-)$plot + 
-  theme_bw(base_size = 25) +
-  theme(
-    legend.position = "bottom",
-    plot.title = element_text(hjust = 0.5)
-    ) +
-  scale_size_manual(
-    breaks = c("< 0.05", ">= 0.05"),
-    values = c(5, 10),
-    drop = FALSE
-  ) + 
-  labs(size = "p-value") + 
-  scale_y_continuous(limits = c(0, 1)) + 
-  scale_fill_viridis_c(option = "C")
-
-#plot map
-x.map <- ggplot(data = raster::as.data.frame(x, xy = TRUE)) + 
-  geom_tile(
-    aes(
-      x = x, 
-      y = y, 
-      fill = variable
-    )
-  ) + 
-  coord_fixed(expand = FALSE) + 
-  scale_fill_viridis_c(option = "C") + 
-  theme_bw(base_size = 25) + 
-  theme(
-    legend.position = "bottom", 
-    legend.key.width = unit(2,"cm"),
-    plot.title = element_text(hjust = 0.5)
-  ) + 
-  labs(
-    fill = "",
-    title = "Aridity index",
-    x = "Longitude",
-    y = "Latitude"
-  )
-
-x.map | xy.moran.plot
-```
-
-
----
-class: center middle
-
-```{r, fig.height=9, fig.width=12, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
-#loading raster
-x <- raster::raster("data/temperature.tif")
-names(x) <- "variable"
-x <- x/10
-
-#cropping to square
-new.extent <- raster::extent(
-  c(
-    xmin = extent(x)@xmax - (extent(x)@ymax - extent(x)@ymin),
-    xmax = extent(x)@xmax,
-    ymin = extent(x)@ymin,
-    ymax = extent(x)@ymax
-  )
-)
-
-x <- raster::crop(
-  x = x,
-  y = new.extent
-)
-
-#extracting values of the raster data
-x.values <- raster::extract(
-  x = x,
-  y = xy,
-  df = TRUE
-)[, 2]
-
-#autocorrelation
-xy.moran.plot <- spatialRF::moran_multithreshold(
-  x = x.values,
-  distance.matrix = xy.distance,
-  distance.thresholds = seq(0, 100, by = 10),
-  verbose = FALSE
-)$plot + 
-  theme_bw(base_size = 25) +
-  theme(
-    legend.position = "bottom",
-    plot.title = element_text(hjust = 0.5)
-    ) +
-  scale_size_manual(
-    breaks = c("< 0.05", ">= 0.05"),
-    values = c(5, 10),
-    drop = FALSE
-  ) + 
-  labs(size = "p-value") + 
-  scale_y_continuous(limits = c(0, 1)) + 
-  scale_fill_viridis_c(option = "C")
-
-#plot map
-x.map <- ggplot(data = raster::as.data.frame(x, xy = TRUE)) + 
-  geom_tile(
-    aes(
-      x = x, 
-      y = y, 
-      fill = variable
-    )
-  ) + 
-  coord_fixed(expand = FALSE) + 
-  scale_fill_viridis_c(option = "C") + 
-  theme_bw(base_size = 25) + 
-  theme(
-    legend.position = "bottom", 
-    legend.key.width = unit(2,"cm"),
-    plot.title = element_text(hjust = 0.5)
-  ) + 
-  labs(
-    fill = "",
-    title = "Mean temperature",
-    x = "Longitude",
-    y = "Latitude"
-  )
-
-x.map | xy.moran.plot
-```
-
----
-class: center middle
-
-```{r, fig.height=9, fig.width=12, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
-#loading raster
-x <- raster::raster("data/ndvi.tif")
-names(x) <- "variable"
-x[is.na(x)] <- 0
-
-#cropping to square
-new.extent <- raster::extent(
-  c(
-    xmin = extent(x)@xmax - (extent(x)@ymax - extent(x)@ymin),
-    xmax = extent(x)@xmax,
-    ymin = extent(x)@ymin,
-    ymax = extent(x)@ymax
-  )
-)
-
-x <- raster::crop(
-  x = x,
-  y = new.extent
-)
-
-#extracting values of the raster data
-x.values <- raster::extract(
-  x = x,
-  y = xy,
-  df = TRUE
-)[, 2]
-
-#autocorrelation
-xy.moran.plot <- spatialRF::moran_multithreshold(
-  x = x.values,
-  distance.matrix = xy.distance,
-  distance.thresholds = seq(0, 100, by = 10),
-  verbose = FALSE
-)$plot + 
-  theme_bw(base_size = 25) +
-  theme(
-    legend.position = "bottom",
-    plot.title = element_text(hjust = 0.5)
-    ) +
-  scale_size_manual(
-    breaks = c("< 0.05", ">= 0.05"),
-    values = c(5, 10),
-    drop = FALSE
-  ) + 
-  labs(size = "p-value") + 
-  scale_y_continuous(limits = c(0, 1)) + 
-  scale_fill_viridis_c(option = "C")
-
-#plot map
-x.map <- ggplot(data = raster::as.data.frame(x, xy = TRUE)) + 
-  geom_tile(
-    aes(
-      x = x, 
-      y = y, 
-      fill = variable
-    )
-  ) + 
-  coord_fixed(expand = FALSE) + 
-  scale_fill_viridis_c(option = "C") + 
-  theme_bw(base_size = 25) + 
-  theme(
-    legend.position = "bottom", 
-    legend.key.width = unit(2,"cm"),
-    plot.title = element_text(hjust = 0.5)
-  ) + 
-  labs(
-    fill = "",
-    title = "Vegetation index (NDVI)",
-    x = "Longitude",
-    y = "Latitude"
-  )
-
-x.map | xy.moran.plot
-```
-
-
----
-class: center middle
-
-```{r, fig.height=9, fig.width=12, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
-#loading raster
-x <- raster::raster("data/accesibility.tif")
-names(x) <- "variable"
-
-#cropping to square
-new.extent <- raster::extent(
-  c(
-    xmin = extent(x)@xmax - (extent(x)@ymax - extent(x)@ymin),
-    xmax = extent(x)@xmax,
-    ymin = extent(x)@ymin,
-    ymax = extent(x)@ymax
-  )
-)
-
-x <- raster::crop(
-  x = x,
-  y = new.extent
-)
-
-#extracting values of the raster data
-x.values <- raster::extract(
-  x = x,
-  y = xy,
-  df = TRUE
-)[, 2]
-
-#autocorrelation
-xy.moran.plot <- spatialRF::moran_multithreshold(
-  x = x.values,
-  distance.matrix = xy.distance,
-  distance.thresholds = seq(0, 100, by = 10),
-  verbose = FALSE
-)$plot + 
-  theme_bw(base_size = 25) +
-  theme(
-    legend.position = "bottom",
-    plot.title = element_text(hjust = 0.5)
-    ) +
-  scale_size_manual(
-    breaks = c("< 0.05", ">= 0.05"),
-    values = c(5, 10),
-    drop = FALSE
-  ) + 
-  labs(size = "p-value") + 
-  scale_y_continuous(limits = c(0, 1)) + 
-  scale_fill_viridis_c(option = "C")
-
-#plot map
-x.map <- ggplot(data = raster::as.data.frame(x, xy = TRUE)) + 
-  geom_tile(
-    aes(
-      x = x, 
-      y = y, 
-      fill = variable
-    )
-  ) + 
-  coord_fixed(expand = FALSE) + 
-  scale_fill_viridis_c(option = "C") + 
-  theme_bw(base_size = 25) + 
-  theme(
-    legend.position = "bottom", 
-    legend.key.width = unit(2,"cm"),
-    plot.title = element_text(hjust = 0.5)
-  ) + 
-  labs(
-    fill = "",
-    title = "Accesibility",
-    x = "Longitude",
-    y = "Latitude"
-  )
-
-x.map | xy.moran.plot
-```
-
----
-class: center middle
-
-```{r, fig.height=9, fig.width=12, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
-#loading raster
-x <- raster::raster("data/human_footprint.tif")
-names(x) <- "variable"
-
-#cropping to square
-new.extent <- raster::extent(
-  c(
-    xmin = extent(x)@xmax - (extent(x)@ymax - extent(x)@ymin),
-    xmax = extent(x)@xmax,
-    ymin = extent(x)@ymin,
-    ymax = extent(x)@ymax
-  )
-)
-
-x <- raster::crop(
-  x = x,
-  y = new.extent
-)
-
-#extracting values of the raster data
-x.values <- raster::extract(
-  x = x,
-  y = xy,
-  df = TRUE
-)[, 2]
-
-#autocorrelation
-xy.moran.plot <- spatialRF::moran_multithreshold(
-  x = x.values,
-  distance.matrix = xy.distance,
-  distance.thresholds = seq(0, 100, by = 10),
-  verbose = FALSE
-)$plot + 
-  theme_bw(base_size = 25) +
-  theme(
-    legend.position = "bottom",
-    plot.title = element_text(hjust = 0.5)
-    ) +
-  scale_size_manual(
-    breaks = c("< 0.05", ">= 0.05"),
-    values = c(5, 10),
-    drop = FALSE
-  ) + 
-  labs(size = "p-value") + 
-  scale_y_continuous(limits = c(0, 1)) + 
-  scale_fill_viridis_c(option = "C")
-
-#plot map
-x.map <- ggplot(data = raster::as.data.frame(x, xy = TRUE)) + 
-  geom_tile(
-    aes(
-      x = x, 
-      y = y, 
-      fill = variable
-    )
-  ) + 
-  coord_fixed(expand = FALSE) + 
-  scale_fill_viridis_c(option = "C") + 
-  theme_bw(base_size = 25) + 
-  theme(
-    legend.position = "bottom", 
-    legend.key.width = unit(2,"cm"),
-    plot.title = element_text(hjust = 0.5)
-  ) + 
-  labs(
-    fill = "",
-    title = "Human footprint",
-    x = "Longitude",
-    y = "Latitude"
-  )
-
-x.map | xy.moran.plot
-```
-
-
----
-class: center middle
-
-```{r, fig.height=9, fig.width=12, fig.retina = 2, message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
-#loading raster
-x <- raster::raster("data/slope.tif")
-names(x) <- "variable"
-
-#cropping to square
-new.extent <- raster::extent(
-  c(
-    xmin = extent(x)@xmax - (extent(x)@ymax - extent(x)@ymin),
-    xmax = extent(x)@xmax,
-    ymin = extent(x)@ymin,
-    ymax = extent(x)@ymax
-  )
-)
-
-x <- raster::crop(
-  x = x,
-  y = new.extent
-)
-
-#extracting values of the raster data
-x.values <- raster::extract(
-  x = x,
-  y = xy,
-  df = TRUE
-)[, 2]
-
-#autocorrelation
-xy.moran.plot <- spatialRF::moran_multithreshold(
-  x = x.values,
-  distance.matrix = xy.distance,
-  distance.thresholds = seq(0, 100, by = 10),
-  verbose = FALSE
-)$plot + 
-  theme_bw(base_size = 25) +
-  theme(
-    legend.position = "bottom",
-    plot.title = element_text(hjust = 0.5)
-    ) +
-  scale_size_manual(
-    breaks = c("< 0.05", ">= 0.05"),
-    values = c(5, 10),
-    drop = FALSE
-  ) + 
-  labs(size = "p-value") + 
-  scale_y_continuous(limits = c(0, 1)) + 
-  scale_fill_viridis_c(option = "C")
-
-#plot map
-x.map <- ggplot(data = raster::as.data.frame(x, xy = TRUE)) + 
-  geom_tile(
-    aes(
-      x = x, 
-      y = y, 
-      fill = variable
-    )
-  ) + 
-  coord_fixed(expand = FALSE) + 
-  scale_fill_viridis_c(option = "C") + 
-  theme_bw(base_size = 25) + 
-  theme(
-    legend.position = "bottom", 
-    legend.key.width = unit(2,"cm"),
-    plot.title = element_text(hjust = 0.5)
-  ) + 
-  labs(
-    fill = "",
-    title = "Topographic slope",
-    x = "Longitude",
-    y = "Latitude"
-  )
-
-x.map | xy.moran.plot
-```
 
 ---
 class: center, middle
 
-## So far we know that:
+.content-box[What does SAC *really* represent?]
 
-.left[
+## The *footprint* <br> of the process generating <br> the variable of interest!
 
-- **Similarity depends on distance**
-- We measure it as **spatial autocorrelation**
-
-]
-
-.medium[
-But...
-]
-
-.content-box[...what does SAC *really* represent?]
-
----
-class: center, middle
-
-## Spatial autocorrelation <br> often represents <br> the *footprint* <br> of the process generating <br> the variable of interest!
+.medium[(mixed with the observation scale and sampling structure)]
 
 ---
 class: center
@@ -1000,6 +466,7 @@ class: center
 ```{r echo=FALSE, out.width="60%", out.height="60%"}
 knitr::include_graphics("figures/cholera.jpg")
 ```
+<br>
 
 .small[
 .footnote[
@@ -1010,17 +477,11 @@ knitr::include_graphics("figures/cholera.jpg")
 ---
 class: center
 
-## Cholera map (John Snow<sup>1</sup>, 1854)
+## Cholera map (John Snow, 1854)
 
 ```{r echo=FALSE, out.width="60%", out.height="60%"}
 knitr::include_graphics("figures/cholera2.jpg")
 ```
-
-.small[
-.footnote[
-[1] Not *that* John Snow
-]
-]
 
 ---
 class: center
@@ -1055,109 +516,23 @@ Source: [www.dailymail.co.uk](https://www.dailymail.co.uk/news/article-2982830/A
 ]
 
 ---
-class: center
-
-## *Quercus pyrenaica* forest
-
-
-```{r echo=FALSE, out.width="90%", out.height="60%"}
-knitr::include_graphics("figures/quercus.png")
-```
-
----
-class: center
-
-## *Quercus pyrenaica* forest
-
-
-```{r echo=FALSE, out.width="90%", out.height="60%"}
-knitr::include_graphics("figures/quercus2.png")
-```
-
-
----
 class: inverse middle center
 
-# ACCOUNTING FOR <br> SPATIAL AUTOCORRELATION <br> WITH RANDOM FOREST
+# SPATIAL PREDICTORS
 
 ---
 class: middle center
 
-## SPATIAL PREDICTORS
+## WHAT ARE <br> SPATIAL PREDICTORS?
 
-.small[
-**Predictors representing the spatial structure of the data** (or more generally **proxies of stuff we don't know about**)
-]
-
-.left[
-
-- Columns of the distance matrix
-- Eigenvectors of the distance matrix (a.k.a *Eigenvector Spatial Filtering* or **Moran's Eigenvector Maps**)
+.medium[
+**Variables representing <br> the spatial structure of the data**
+<br><br>
+Proxies of the process <br> originating spatial autocorrelation
+<br><br>
+How?: **Eigenvectors of a neighborhood matrix**
 
 ]
-
----
-class: middle center
-
-## USING THE COLUMNS OF THE DISTANCE MATRIX AS SPATIAL PREDICTORS
-
----
-class: middle center
-
-### DISTANCE MATRIX
-
-```{r echo=FALSE, out.width="90%", out.height="60%"}
-knitr::include_graphics("figures/distancematrix.png")
-```
-
----
-class: middle center
-
-### DISTANCE MATRIX
-
-.small[Approach named **RFsp** (Hengl *et al.* 2018)]
-
-```{r echo=FALSE, out.width="90%", out.height="60%"}
-knitr::include_graphics("figures/hengl.png")
-```
-
----
-class: middle center
-
-### DISTANCE MATRIX
-
-.small[Authors compare **RFsp** with several alternatives]
-
-```{r echo=FALSE, out.width="90%", out.height="60%"}
-knitr::include_graphics("figures/rfsp1.png")
-```
-
----
-class: middle left
-
-### PROS
-
-- Easy to apply and understand
-- As good as geostatistics (kriging)
-- Removes spatial autocorrelation of model residuals
-- Importance scores of distance columns easy to interpret
-- Allows prediction over raster data
-
-
----
-class: middle left
-
-### CONS
-
-- Model training can be computationally expensive
-- Limit in number of records depends on the RAM memory available
-- Model is hard to generalize outside of the training universe (especially when the sampling is irregular)
-- Columns of the distance matrix can be highly collinear, introduces redundancy in the predictors
-
----
-class: middle center
-
-## USING THE EIGENVECTORS OF THE DISTANCE MATRIX AS SPATIAL PREDICTORS
 
 ---
 class: middle center
@@ -1176,26 +551,20 @@ knitr::include_graphics("figures/paper.png")
 ---
 class: middle center
 
-## EIGENVECTORS
-
-<br>
+## MAIN IDEA
 
 .medium[
-**Main idea:** linear combinations of the eigenvectors of a neighborhood matrix represent all the possible spatial configurations of a given set of spatial records.
+**Linear combinations of the eigenvectors of a neighborhood matrix represent all the possible spatial configurations of a given set of spatial records**
 ]
 
-.small[**Let's see how that works!**]
+.small[Let's see how that works!]
 
 ---
 class: middle center
 
-### EIGENVECTORS
+### HYPOTHETIC SPATIAL RECORDS
 
-.small[
-Hypothetic spatial records
-]
-
-```{r, echo=FALSE, out.width="50%", out.height="40%", fig.retina = 2}
+```{r, echo=FALSE, out.width="60%", out.height="50%", fig.retina = 2}
 #creating the pairs of coordinates
 xy <- expand.grid(
   x = 1:5,
@@ -1215,13 +584,11 @@ ggplot(data = xy) +
 ---
 class: middle center
 
-### EIGENVECTORS
+### DISTANCE MATRIX
 
-.small[
-Distance matrix
-]
+<br>
 
-```{r, echo=FALSE, out.height="80%", fig.retina = 2}
+```{r, echo=FALSE, out.height="90%", fig.retina = 2}
 #creating the distance matrix
 xy.distances <- dist(
   xy, 
@@ -1247,13 +614,13 @@ ggplot(data = reshape2::melt(xy.distances)) +
 ---
 class: middle center
 
-### EIGENVECTORS
+### MATRIX OF WEIGHTS
 
 .small[
-Matrix of weights (1/distance matrix)
+Computed as 1/distance matrix
 ]
 
-```{r, echo=FALSE, out.height="80%", fig.retina = 2}
+```{r, echo=FALSE, out.height="90%", fig.retina = 2}
 #thresholdding and weights
 xy.distances[xy.distances <= 1] <- 1
 diag(xy.distances) <- NA
@@ -1276,10 +643,10 @@ ggplot(data = reshape2::melt(xy.weights)) +
 ---
 class: middle center
 
-### EIGENVECTORS
+### NORMALIZED AND DOUBLE-CENTERED
 
 .small[
-Weights normalized by row sums
+column and row means are 0
 ]
 
 ```{r, echo=FALSE, out.height="100%", fig.retina = 2}
@@ -1296,30 +663,6 @@ xy.weights[xy.weights == Inf] <- 0
 #adding zero to diagonals
 diag(xy.weights) <- 0
 
-ggplot(data = reshape2::melt(xy.weights)) + 
-  aes(
-    x = Var1,
-    y = Var2,
-    fill = value
-  ) + 
-  geom_tile() + 
-  theme_bw(base_size = 20) + 
-  scale_fill_viridis_c(option = "C", direction = -1) + 
-  coord_fixed(expand = FALSE) + 
-  labs(fill = "Normalized \n weight", x = "Observation", y = "Observation") +
-  theme(plot.margin = unit(c(0,0,3,0),"cm"))
-```
-
----
-class: middle center
-
-### EIGENVECTORS
-
-.small[
-Double-centering (col and row means = 0)
-]
-
-```{r, echo=FALSE, out.height="100%", fig.retina = 2}
 #double centering weights matrix
 
 #compute row means
@@ -1347,14 +690,11 @@ ggplot(data = reshape2::melt(xy.weights.double.centered)) +
   labs(fill = "Double \n centered \n weights", x = "Observation", y = "Observation") +
   theme(plot.margin = unit(c(0,0,3,0),"cm"))
 ```
+
 ---
 class: middle center
 
-### EIGENVECTORS
-
-.small[
-Eigenvectors in the geographic space
-]
+### EIGENVECTORS IN SPACE
 
 ```{r, echo=FALSE, fig.retina = 2, fig.width=10, fig.height=7.5, out.width="120%", out.height="60%"}
 #eigenvalues and eigenvectors
@@ -1385,9 +725,9 @@ ggplot(data = cbind(
   coord_cartesian(expand = FALSE) + 
   scale_fill_gradient2(
     midpoint = 0, 
-    low = "#fba437", 
+    low = "#787878", 
     mid = "white", 
-    high = "#131789"
+    high = "#f1605d"
     ) + 
   labs(x = "", y = "", fill = "Value") + 
   theme(strip.background = element_rect(
@@ -1402,11 +742,7 @@ ggplot(data = cbind(
 ---
 class: middle center
 
-### EIGENVECTORS
-
-.medium[
-Eigenvectors with Moran's I > 0
-]
+### EIGENVECTORS WITH MORAN'S I > 0
 
 ```{r, echo=FALSE, fig.retina = 2, fig.width=10, fig.height=7, out.width="120%", out.height="60%"}
 #normalize eigenvalues
@@ -1460,9 +796,9 @@ ggplot(data = plot.df
   coord_cartesian(expand = FALSE) + 
   scale_fill_gradient2(
     midpoint = 0, 
-    low = "#fba437", 
+    low = "#787878", 
     mid = "white", 
-    high = "#131789"
+    high = "#f1605d"
     ) + 
   labs(x = "", y = "", fill = "Value") + 
   theme(strip.background = element_rect(colour = "black", fill = "white")) + 
@@ -1473,51 +809,17 @@ ggplot(data = plot.df
 ---
 class: middle center
 
-### EIGENVECTORS
+### MODEL TRAINING
 
 ```{r echo=FALSE, out.width="90%", out.height="60%", fig.retina = 2}
 knitr::include_graphics("figures/eigenvectors.png")
 ```
 
----
-class: middle center
-
-### EIGENVECTORS
-
-.left[
-
-.medium[At this point we have several alternatives:]
-
-- Use all eigenvectors
-- Fit a model, check importance scores, and remove the non-important ones
-- Forward or backward variable selection to minimize the number of eigenvectors
-
-]
-
----
-class: middle left
-
-### PROS
-
-- Requires fewer spatial predictors than the previous method (but final number depends on the selection method)
-- Very flexible to represent complex spatial patterns
-- Eigenvectors are not collinear, there are not redundant predictors in the model
-
-
----
-class: middle left
-
-### CONS
-
-- Complex to explain and implement
-- Eigenvector computation and selection for large datasets is computationally expensive
-- Works slightly better when sampling is regular
-- Does not allow prediction over raster data (well, it does, but only for very small areas)
 
 ---
 class: inverse middle center
 
-# Examples with the R package *spatialRF*
+# Example with the R package *spatialRF*
 
 ```{r, echo = FALSE}
 rm(list=ls())
@@ -1535,7 +837,7 @@ class: middle center
 - Website: [https://blasbenito.github.io/spatialRF/](https://blasbenito.github.io/spatialRF/)
 - Not in CRAN yet.
 
-.small[To install it:]
+.small[Install:]
 
 .medium[
 ```{r, eval = FALSE}
@@ -1559,7 +861,7 @@ class: middle left
 .pull-left[
 .tiny[
 - **Response variable**: plant richness of the American ecoregions
-- **17 predictors** (climate, topography,  human impact, etc)
+- **14 predictors** (climate, topography,  human impact, etc)
 - **Distance matrix** among the ecoregion polygons (centroids shown in the figure)
 ]
 ]
@@ -1595,8 +897,12 @@ ggplot2::ggplot() +
   ggplot2::scale_x_continuous(limits = c(-170, -30)) +
   ggplot2::scale_y_continuous(limits = c(-58, 80))  +
   ggplot2::xlab("Longitude") + 
-  ggplot2::ylab("Latitude") + 
-  coord_sf()
+  ggplot2::ylab("Latitude") +
+  theme(
+    legend.position = "bottom", 
+    plot.margin = unit(c(0,0,3,0),"cm"),
+    legend.key.size = unit(2, "cm")
+    )
 ```
 
 ]
@@ -1616,13 +922,31 @@ data(distance_matrix)
 
 #names of the response and predictors
 response.name <- "richness_species_vascular"
-predictor.names <- colnames(plant_richness_df)[5:21]
+predictor.names <- c(
+  "human_population",               #human
+  "human_population_density",
+  "human_footprint_average",
+  "climate_hypervolume",            #climate
+  "climate_bio1_average", 
+  "climate_bio15_minimum",
+  "climate_aridity_index_average",
+  "climate_velocity_lgm_average",
+  "neighbors_area",                 #neighbours
+  "neighbors_count", 
+  "neighbors_percent_shared_edge", 
+  "bias_area_km2",                  #size and shape
+  "fragmentation_cohesion",
+  "fragmentation_division"
+  )
 
 #case coordinates
 xy <- plant_richness_df[, c("x", "y")]
 
 #distance thresholds in km
 distance.thresholds <- c(50, 500, 5000)
+
+#random seed for reproducibility
+random.seed <- 1
 ```
 ]
 ]
@@ -1632,38 +956,21 @@ class: middle left
 
 ### Fitting the models
 
-.small[
-```{r, eval = TRUE}
-#non-spatial model, just predictors
+.medium[
+```{r, eval = TRUE, results = "hide", fig.show='hide'}
+#non-spatial model, predictors only
 model.non.spatial <- spatialRF::rf(
   data = plant_richness_df,
   dependent.variable.name = response.name,
   predictor.variable.names = predictor.names,
   distance.matrix = distance_matrix,
-  distance.thresholds = distance.thresholds,
-  verbose = FALSE
+  distance.thresholds = distance.thresholds
 )
 
-#using distance matrix as spatial predictors
-model.distance.matrix <- spatialRF::rf_spatial(
-  data = plant_richness_df,
-  dependent.variable.name = response.name,
-  predictor.variable.names = predictor.names,
-  distance.matrix = distance_matrix,
-  distance.thresholds = distance.thresholds,
-  method = "hengl",
-  verbose = FALSE
-)
-
-#eigenvectors ordered by their Moran's I
-model.mem.sequential <- spatialRF::rf_spatial(
-  data = plant_richness_df,
-  dependent.variable.name = response.name,
-  predictor.variable.names = predictor.names,
-  distance.matrix = distance_matrix,
-  distance.thresholds = distance.thresholds,
-  method = "mem.moran.sequential",
-  verbose = FALSE
+#spatial model, predictors and spatial predictors
+model.spatial <- spatialRF::rf_spatial(
+  model = model.non.spatial,
+  method = "mem.moran.sequential"
 )
 ```
 ]
@@ -1671,21 +978,58 @@ model.mem.sequential <- spatialRF::rf_spatial(
 ---
 class: middle left
 
-## Comparing the models with spatial cross-validation
+.center[## Comparing the models with spatial cross-validation]
 
-.medium[
-```{r, eval = TRUE}
+.pull-left[
+.small[
+<br>
+```{r, eval = TRUE, results = "hide", fig.show='hide'}
 model.comparison <- spatialRF::rf_compare(
   models = list(
     model.non.spatial = model.non.spatial,
-    model.distance.matrix = model.distance.matrix,
-    model.mem.sequential = model.mem.sequential
+    model.spatial = model.spatial
   ),
   xy = xy,
   repetitions = 100,
-  metrics = "rmse",
-  verbose = FALSE
+  metrics = "rmse"
 )
+```
+]
+]
+
+.pull-right[
+```{r, echo = FALSE, fig.retina=2, fig.width=10, fig.height=10, out.width="100%"}
+plot.df <- xy
+plot.df$group.2 <- plot.df$group.1 <- "Training"
+plot.df[model.comparison$spatial.folds[[1]]$testing, "group.1"] <- "Testing"
+
+ggplot2::ggplot() +
+  ggplot2::geom_sf(
+    data = world, 
+    fill = "white"
+  ) +
+  ggplot2::geom_point(
+    data = plot.df,
+    ggplot2::aes(
+      x = x,
+      y = y,
+      color = group.1
+    ),
+    size = 2
+  ) +
+  scale_color_manual(values = c("#696969", "#f1605d")) +
+  ggplot2::theme_bw(base_size = 20) +
+  ggplot2::labs(color = "Group") +
+  ggplot2::scale_x_continuous(limits = c(-170, -30)) +
+  ggplot2::scale_y_continuous(limits = c(-58, 80))  +
+  ggplot2::ggtitle("Spatial fold 1") + 
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(hjust = 0.5),
+    legend.position = "bottom", 
+    plot.margin = unit(c(0,0,3,0),"cm")
+  ) + 
+  ggplot2::xlab("Longitude") + 
+  ggplot2::ylab("Latitude")
 ```
 ]
 
@@ -1693,28 +1037,25 @@ model.comparison <- spatialRF::rf_compare(
 class: middle center
 
 ## Model comparison
+<br>
 
 ```{r, echo = FALSE}
-results.df <- data.frame(
+comparison.df <- data.frame(
   model = c(
     "Non spatial",
-    "Distance matrix",
-    "MEM sequential"
+    "Spatial"
   ),
   spatial.predictors = c(
     0,
-    length(model.distance.matrix$spatial$names),
-    length(model.mem.sequential$spatial$names)
+    length(model.spatial$spatial$names)
   ),
   moran.i.residuals = c(
     model.non.spatial$residuals$autocorrelation$per.distance$moran.i[1],
-    model.distance.matrix$residuals$autocorrelation$per.distance$moran.i[1],
-    model.mem.sequential$residuals$autocorrelation$per.distance$moran.i[1]
+    model.spatial$residuals$autocorrelation$per.distance$moran.i[1]
   ),
   intrinsic.rmse = c(
     model.non.spatial$performance$rmse,
-    model.distance.matrix$performance$rmse,
-    model.mem.sequential$performance$rmse
+    model.spatial$performance$rmse
   ),
   extrinsic.rmse = c(
     median(
@@ -1722,11 +1063,7 @@ results.df <- data.frame(
         pull()
       ),
     median(
-      model.comparison$comparison.df %>% dplyr::filter(model == "model.distance.matrix") %>% dplyr::select(value) %>% 
-        pull()
-      ),
-    median(
-      model.comparison$comparison.df %>% dplyr::filter(model == "model.mem.sequential") %>% dplyr::select(value) %>% 
+      model.comparison$comparison.df %>% dplyr::filter(model == "model.spatial") %>% dplyr::select(value) %>% 
         pull()
       )
   )
@@ -1738,9 +1075,9 @@ results.df <- data.frame(
   )
 
 kableExtra::kbl(
-  results.df, 
+  comparison.df, 
   format = 'html',
-  col.names = c("Model", "spatial predictors", "Moran's I residuals", "RMSE oob", "RMSE spatial cv")
+  col.names = c("Model", "spatial predictors", "Moran's I of residuals", "RMSE oob", "RMSE spatial cv")
   )
 ```
 
@@ -1755,13 +1092,13 @@ class: middle center
 importance.df <- rbind(
   model.non.spatial$importance$per.variable %>% 
   dplyr::mutate(model = "Non spatial"),
-  model.distance.matrix$importance$per.variable %>% 
-  dplyr::mutate(model = "Distance matrix"),
-   model.mem.sequential$importance$per.variable %>% 
-  dplyr::mutate(model = "MEM sequential")
+   model.spatial$importance$spatial.predictors %>% 
+  dplyr::mutate(
+    model = "Spatial",
+    variable = ifelse(variable == "spatial_predictors", "spatial_predictors_mem", variable)
+    )
 ) %>% 
-  dplyr::arrange(desc(importance)) %>% 
-  dplyr::filter(importance >= quantile(importance, 0.8))
+  dplyr::arrange(desc(importance))
 
 ggplot(data = importance.df) + 
   aes(
@@ -1771,15 +1108,127 @@ ggplot(data = importance.df) +
           importance,
           FUN = max
         ),
-        fill = model
+        color = model
   ) +
    ggplot2::geom_point(
         size = 4,
-        shape = 21
         ) + 
   theme_bw(base_size = 15) + 
-  labs(y = "Variables with importance above 90th percentile", x = "Increase in RMSE when permuted", fill = "Model") + 
-  scale_fill_viridis_d(option = "C", alpha = 0.75, end = 0.9) +
-  theme(plot.margin = unit(c(0,0,3,0),"cm"))
+  labs(
+    y = "", 
+    x = "Increase in RMSE when permuted", 
+    color = "Model"
+    ) + 
+  scale_color_manual(values = c("#696969", "#f1605d")) +
+  theme(
+    plot.margin = unit(c(0,0,3,0),"cm"), 
+    legend.position = "bottom"
+    )
 ```
+
+---
+class: middle center
+
+## Importance of spatial predictors
+
+```{r, fig.width=10, fig.height=7, out.width="120%", fig.retina = 2, out.height="60%", message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+
+importance.df <- model.spatial$importance$per.variable %>% 
+  dplyr::filter(grepl("spatial_predictor", variable))
+
+ggplot(data = importance.df) + 
+  aes(
+    x = importance,
+    y = reorder(
+          variable,
+          importance,
+          FUN = max
+        ),
+        color = importance
+  ) +
+   ggplot2::geom_point(
+        size = 4,
+        color = "#f1605d"
+        ) + 
+  theme_bw(base_size = 15) + 
+  labs(
+    y = "", 
+    x = "Increase in RMSE when permuted", 
+    color = "Model"
+    ) + 
+  theme(
+    plot.margin = unit(c(0,0,3,0),"cm"), 
+    legend.position = "none"
+    )
+```
+
+
+---
+class: middle center
+
+## Response curves
+
+```{r, fig.width=10, fig.height=7, out.width="120%", fig.retina = 2, out.height="60%", message = FALSE, error = FALSE, warning = FALSE, echo = FALSE, results = "hide"}
+variables <- c("human_population", "climate_bio1_average", "climate_hypervolume", "bias_area_km2")
+plot.df <- rbind(
+  spatialRF::get_response_curves(
+    model = model.non.spatial,
+    variables =variables,
+    quantiles = 0.5
+  ) %>% 
+    dplyr::mutate(model = "Non spatial"),
+  spatialRF::get_response_curves(
+    model = model.spatial,
+    variables = variables,
+    quantiles = 0.5
+  ) %>% 
+    dplyr::mutate(model = "Spatial")
+)
+
+ggplot(data = plot.df) + 
+  aes(
+    x = predictor,
+    y = response,
+    group = model,
+    color = model
+  ) + 
+  geom_path(size = 1) + 
+  facet_wrap("predictor.name", scales = "free_x", ncol = 2) + 
+  theme_bw(base_size = 20) +
+    labs(
+    y = "Richness of vascular plants", 
+    x = "", 
+    color = "Model"
+    ) + 
+  scale_color_manual(values = c("#696969", "#f1605d")) +
+  theme(
+    plot.margin = unit(c(0,0,1,0),"cm"), 
+    legend.position = "bottom"
+    )
+```
+
+---
+class: middle left
+
+## A FEW IDEAS
+
+
+- **Spatial predictors** reduce SAC in model residuals (**GOOD**)
+- **Spatial predictors** hinder model transferability (**KINDA BAD**)
+- **Eigenvectors**: Outcome similar to base model, plus information about the importance of spatial processes (**GOOD**)
+- Computational demands limit sample size
+
+---
+class: middle center
+
+## FINAL MESSAGE
+
+.medium[
+Incorporating **eigenvectors of the distance matrix** into spatial analyses might improve understanding on underlying spatial processes not represented by the covariates.
+]
+
+---
+class: middle
+background-image: url("figures/end.png")
+background-size: contain
 

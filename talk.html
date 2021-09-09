@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>Autocorrelation   in spatial regression   with Machine Learning methods</title>
+    <title>Autocorrelation   in spatial regression   with Random Forest</title>
     <meta charset="utf-8" />
     <meta name="author" content="Blas M. Benito" />
     <meta name="date" content="2021-09-09" />
@@ -16,8 +16,7 @@
     <textarea id="source">
 class: center, middle, inverse, title-slide
 
-# Autocorrelation <br> in spatial regression <br> with Machine Learning methods
-## (with a focus on Random Forest)
+# Autocorrelation <br> in spatial regression <br> with Random Forest
 ### Blas M. Benito
 ### University of Alicante (Spain)
 ### 2021-09-09
@@ -25,9 +24,6 @@ class: center, middle, inverse, title-slide
 ---
 
 class: center, middle
-
-
-
 
 
 
@@ -121,14 +117,15 @@ ul li::before {
 
 # Availability
 
+.left[
 .small[
-Github repo: &lt;br&gt;
-[https://github.com/BlasBenito/spatialRF_talk](https://github.com/BlasBenito/spatialRF_talk)
+Github repo: [BlasBenito/spatialRF_talk](https://github.com/BlasBenito/spatialRF_talk)
 
 Live slideshow: [https://blasbenito.github.io/spatialRF_talk/talk.html](https://blasbenito.github.io/spatialRF_talk/talk.html)
 ]
+]
 
-&lt;img src="figures/github.png" width="80%" height="45%" /&gt;
+&lt;img src="figures/github.png" width="70%" height="40%" /&gt;
 
 
 ---
@@ -152,40 +149,9 @@ Everything is usually related to all else, but those which are near to each othe
 .content-box[Similarity depends on distance]
 
 ---
-class: middle center
-
-.content-box[Similarity depends on distance]
-
-&lt;br&gt;
-
-.left[
-
-- Effect measured as **spatial autocorrelation** (**SAC**)
-- Measured over one or several reference distances
-- High similarity over distance: **positive SAC**
-- Low similarity over distance: **negative SAC**
-- Most popular metric of **SAC** is **Moran's I**
-
-]
-
----
-class: middle center
-
-## Moran's I
-
-.left[
-
-- Slope of record's values versus the distance-weighted values of their neighbors.
-- Range between -1 and 1
-- Higher than zero: **positive SAC**
-- Lower than zero: **negative SAC**
-
-]
-
----
 class: center
 
-&lt;img src="talk_files/figure-html/unnamed-chunk-2-1.png" width="120%" height="60%" /&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-2-1.png" width="1224" /&gt;
 
 ---
 class: center middle
@@ -195,65 +161,13 @@ class: center middle
 
 
 ---
-class: center middle
-
-# Most spatial variables &lt;br&gt; show &lt;br&gt; spatial autocorrelation
-
----
-class: center middle
-
-&lt;img src="talk_files/figure-html/unnamed-chunk-5-1.png" width="864" /&gt;
-
-
----
-class: center middle
-
-&lt;img src="talk_files/figure-html/unnamed-chunk-6-1.png" width="864" /&gt;
-
----
-class: center middle
-
-&lt;img src="talk_files/figure-html/unnamed-chunk-7-1.png" width="864" /&gt;
-
-
----
-class: center middle
-
-&lt;img src="talk_files/figure-html/unnamed-chunk-8-1.png" width="864" /&gt;
-
----
-class: center middle
-
-&lt;img src="talk_files/figure-html/unnamed-chunk-9-1.png" width="864" /&gt;
-
-
----
-class: center middle
-
-&lt;img src="talk_files/figure-html/unnamed-chunk-10-1.png" width="864" /&gt;
-
----
 class: center, middle
 
-## So far we know that:
+.content-box[What does SAC *really* represent?]
 
-.left[
+## The *footprint* &lt;br&gt; of the process generating &lt;br&gt; the variable of interest!
 
-- **Similarity depends on distance**
-- We measure it as **spatial autocorrelation**
-
-]
-
-.medium[
-But...
-]
-
-.content-box[...what does SAC *really* represent?]
-
----
-class: center, middle
-
-## Spatial autocorrelation &lt;br&gt; often represents &lt;br&gt; the *footprint* &lt;br&gt; of the process generating &lt;br&gt; the variable of interest!
+.medium[(mixed with the observation scale and sampling structure)]
 
 ---
 class: center
@@ -261,6 +175,7 @@ class: center
 ## Cholera map (John Snow&lt;sup&gt;1&lt;/sup&gt;, 1854)
 
 &lt;img src="figures/cholera.jpg" width="60%" height="60%" /&gt;
+&lt;br&gt;
 
 .small[
 .footnote[
@@ -271,15 +186,9 @@ class: center
 ---
 class: center
 
-## Cholera map (John Snow&lt;sup&gt;1&lt;/sup&gt;, 1854)
+## Cholera map (John Snow, 1854)
 
 &lt;img src="figures/cholera2.jpg" width="60%" height="60%" /&gt;
-
-.small[
-.footnote[
-[1] Not *that* John Snow
-]
-]
 
 ---
 class: center
@@ -310,99 +219,23 @@ Source: [www.dailymail.co.uk](https://www.dailymail.co.uk/news/article-2982830/A
 ]
 
 ---
-class: center
-
-## *Quercus pyrenaica* forest
-
-
-&lt;img src="figures/quercus.png" width="90%" height="60%" /&gt;
-
----
-class: center
-
-## *Quercus pyrenaica* forest
-
-
-&lt;img src="figures/quercus2.png" width="90%" height="60%" /&gt;
-
-
----
 class: inverse middle center
 
-# ACCOUNTING FOR &lt;br&gt; SPATIAL AUTOCORRELATION &lt;br&gt; WITH RANDOM FOREST
+# SPATIAL PREDICTORS
 
 ---
 class: middle center
 
-## SPATIAL PREDICTORS
+## WHAT ARE &lt;br&gt; SPATIAL PREDICTORS?
 
-.small[
-**Predictors representing the spatial structure of the data** (or more generally **proxies of stuff we don't know about**)
-]
-
-.left[
-
-- Columns of the distance matrix
-- Eigenvectors of the distance matrix (a.k.a *Eigenvector Spatial Filtering* or **Moran's Eigenvector Maps**)
+.medium[
+**Variables representing &lt;br&gt; the spatial structure of the data**
+&lt;br&gt;&lt;br&gt;
+Proxies of the process &lt;br&gt; originating spatial autocorrelation
+&lt;br&gt;&lt;br&gt;
+How?: **Eigenvectors of a neighborhood matrix**
 
 ]
-
----
-class: middle center
-
-## USING THE COLUMNS OF THE DISTANCE MATRIX AS SPATIAL PREDICTORS
-
----
-class: middle center
-
-### DISTANCE MATRIX
-
-&lt;img src="figures/distancematrix.png" width="90%" height="60%" /&gt;
-
----
-class: middle center
-
-### DISTANCE MATRIX
-
-.small[Approach named **RFsp** (Hengl *et al.* 2018)]
-
-&lt;img src="figures/hengl.png" width="90%" height="60%" /&gt;
-
----
-class: middle center
-
-### DISTANCE MATRIX
-
-.small[Authors compare **RFsp** with several alternatives]
-
-&lt;img src="figures/rfsp1.png" width="90%" height="60%" /&gt;
-
----
-class: middle left
-
-### PROS
-
-- Easy to apply and understand
-- As good as geostatistics (kriging)
-- Removes spatial autocorrelation of model residuals
-- Importance scores of distance columns easy to interpret
-- Allows prediction over raster data
-
-
----
-class: middle left
-
-### CONS
-
-- Model training can be computationally expensive
-- Limit in number of records depends on the RAM memory available
-- Model is hard to generalize outside of the training universe (especially when the sampling is irregular)
-- Columns of the distance matrix can be highly collinear, introduces redundancy in the predictors
-
----
-class: middle center
-
-## USING THE EIGENVECTORS OF THE DISTANCE MATRIX AS SPATIAL PREDICTORS
 
 ---
 class: middle center
@@ -419,138 +252,78 @@ A good paper to start:
 ---
 class: middle center
 
-## EIGENVECTORS
+## MAIN IDEA
+
+.medium[
+**Linear combinations of the eigenvectors of a neighborhood matrix represent all the possible spatial configurations of a given set of spatial records**
+]
+
+.small[Let's see how that works!]
+
+---
+class: middle center
+
+### HYPOTHETIC SPATIAL RECORDS
+
+&lt;img src="talk_files/figure-html/unnamed-chunk-10-1.png" width="60%" height="50%" /&gt;
+
+---
+class: middle center
+
+### DISTANCE MATRIX
 
 &lt;br&gt;
 
-.medium[
-**Main idea:** linear combinations of the eigenvectors of a neighborhood matrix represent all the possible spatial configurations of a given set of spatial records.
-]
-
-.small[**Let's see how that works!**]
+&lt;img src="talk_files/figure-html/unnamed-chunk-11-1.png" width="504" height="90%" /&gt;
 
 ---
 class: middle center
 
-### EIGENVECTORS
+### MATRIX OF WEIGHTS
 
 .small[
-Hypothetic spatial records
+Computed as 1/distance matrix
 ]
 
-&lt;img src="talk_files/figure-html/unnamed-chunk-21-1.png" width="50%" height="40%" /&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-12-1.png" width="504" height="90%" /&gt;
 
 ---
 class: middle center
 
-### EIGENVECTORS
+### NORMALIZED AND DOUBLE-CENTERED
 
 .small[
-Distance matrix
+column and row means are 0
 ]
 
-&lt;img src="talk_files/figure-html/unnamed-chunk-22-1.png" width="504" height="80%" /&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-13-1.png" width="504" height="100%" /&gt;
 
 ---
 class: middle center
 
-### EIGENVECTORS
+### EIGENVECTORS IN SPACE
 
-.small[
-Matrix of weights (1/distance matrix)
-]
-
-&lt;img src="talk_files/figure-html/unnamed-chunk-23-1.png" width="504" height="80%" /&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-14-1.png" width="120%" height="60%" /&gt;
 
 ---
 class: middle center
 
-### EIGENVECTORS
+### EIGENVECTORS WITH MORAN'S I &gt; 0
 
-.small[
-Weights normalized by row sums
-]
-
-&lt;img src="talk_files/figure-html/unnamed-chunk-24-1.png" width="504" height="100%" /&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-15-1.png" width="120%" height="60%" /&gt;
 
 ---
 class: middle center
 
-### EIGENVECTORS
-
-.small[
-Double-centering (col and row means = 0)
-]
-
-&lt;img src="talk_files/figure-html/unnamed-chunk-25-1.png" width="504" height="100%" /&gt;
----
-class: middle center
-
-### EIGENVECTORS
-
-.small[
-Eigenvectors in the geographic space
-]
-
-&lt;img src="talk_files/figure-html/unnamed-chunk-26-1.png" width="120%" height="60%" /&gt;
-
----
-class: middle center
-
-### EIGENVECTORS
-
-.medium[
-Eigenvectors with Moran's I &gt; 0
-]
-
-&lt;img src="talk_files/figure-html/unnamed-chunk-27-1.png" width="120%" height="60%" /&gt;
-
----
-class: middle center
-
-### EIGENVECTORS
+### MODEL TRAINING
 
 &lt;img src="figures/eigenvectors.png" width="90%" height="60%" /&gt;
 
----
-class: middle center
-
-### EIGENVECTORS
-
-.left[
-
-.medium[At this point we have several alternatives:]
-
-- Use all eigenvectors
-- Fit a model, check importance scores, and remove the non-important ones
-- Forward or backward variable selection to minimize the number of eigenvectors
-
-]
-
----
-class: middle left
-
-### PROS
-
-- Requires fewer spatial predictors than the previous method (but final number depends on the selection method)
-- Very flexible to represent complex spatial patterns
-- Eigenvectors are not collinear, there are not redundant predictors in the model
-
-
----
-class: middle left
-
-### CONS
-
-- Complex to explain and implement
-- Eigenvector computation and selection for large datasets is computationally expensive
-- Works slightly better when sampling is regular
-- Does not allow prediction over raster data (well, it does, but only for very small areas)
 
 ---
 class: inverse middle center
 
-# Examples with the R package *spatialRF*
+# Example with the R package *spatialRF*
 
 
 
@@ -566,7 +339,7 @@ class: middle center
 - Website: [https://blasbenito.github.io/spatialRF/](https://blasbenito.github.io/spatialRF/)
 - Not in CRAN yet.
 
-.small[To install it:]
+.small[Install:]
 
 .medium[
 
@@ -591,14 +364,14 @@ class: middle left
 .pull-left[
 .tiny[
 - **Response variable**: plant richness of the American ecoregions
-- **17 predictors** (climate, topography,  human impact, etc)
+- **14 predictors** (climate, topography,  human impact, etc)
 - **Distance matrix** among the ecoregion polygons (centroids shown in the figure)
 ]
 ]
 
 .pull-right[
 
-&lt;img src="talk_files/figure-html/unnamed-chunk-31-1.png" width="100%" /&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-19-1.png" width="100%" /&gt;
 
 ]
 
@@ -618,13 +391,31 @@ data(distance_matrix)
 
 #names of the response and predictors
 response.name &lt;- "richness_species_vascular"
-predictor.names &lt;- colnames(plant_richness_df)[5:21]
+predictor.names &lt;- c(
+  "human_population",               #human
+  "human_population_density",
+  "human_footprint_average",
+  "climate_hypervolume",            #climate
+  "climate_bio1_average", 
+  "climate_bio15_minimum",
+  "climate_aridity_index_average",
+  "climate_velocity_lgm_average",
+  "neighbors_area",                 #neighbours
+  "neighbors_count", 
+  "neighbors_percent_shared_edge", 
+  "bias_area_km2",                  #size and shape
+  "fragmentation_cohesion",
+  "fragmentation_division"
+  )
 
 #case coordinates
 xy &lt;- plant_richness_df[, c("x", "y")]
 
 #distance thresholds in km
 distance.thresholds &lt;- c(50, 500, 5000)
+
+#random seed for reproducibility
+random.seed &lt;- 1
 ```
 ]
 ]
@@ -634,76 +425,87 @@ class: middle left
 
 ### Fitting the models
 
-.small[
+.medium[
 
 ```r
-#non-spatial model, just predictors
+#non-spatial model, predictors only
 model.non.spatial &lt;- spatialRF::rf(
   data = plant_richness_df,
   dependent.variable.name = response.name,
   predictor.variable.names = predictor.names,
   distance.matrix = distance_matrix,
-  distance.thresholds = distance.thresholds,
-  verbose = FALSE
+  distance.thresholds = distance.thresholds
 )
+```
 
-#using distance matrix as spatial predictors
-model.distance.matrix &lt;- spatialRF::rf_spatial(
-  data = plant_richness_df,
-  dependent.variable.name = response.name,
-  predictor.variable.names = predictor.names,
-  distance.matrix = distance_matrix,
-  distance.thresholds = distance.thresholds,
-  method = "hengl",
-  verbose = FALSE
+```r
+#spatial model, predictors and spatial predictors
+model.spatial &lt;- spatialRF::rf_spatial(
+  model = model.non.spatial,
+  method = "mem.moran.sequential"
 )
+```
 
-#eigenvectors ordered by their Moran's I
-model.mem.sequential &lt;- spatialRF::rf_spatial(
-  data = plant_richness_df,
-  dependent.variable.name = response.name,
-  predictor.variable.names = predictor.names,
-  distance.matrix = distance_matrix,
-  distance.thresholds = distance.thresholds,
-  method = "mem.moran.sequential",
-  verbose = FALSE
-)
+```
+## The model residuals are spatially correlated, fitting a spatial model.
+```
+
+```
+## Using Moran's Eigenvector Maps as spatial predictors.
+```
+
+```
+## Ranking spatial predictors by their Moran's I.
+```
+
+```
+## Sequential selection of spatial predictors.
+```
+
+```
+## Details about the spatial predictors stored in model$spatial.
 ```
 ]
 
 ---
 class: middle left
 
-## Comparing the models with spatial cross-validation
+.center[## Comparing the models with spatial cross-validation]
 
-.medium[
+.pull-left[
+.small[
+&lt;br&gt;
 
 ```r
 model.comparison &lt;- spatialRF::rf_compare(
   models = list(
     model.non.spatial = model.non.spatial,
-    model.distance.matrix = model.distance.matrix,
-    model.mem.sequential = model.mem.sequential
+    model.spatial = model.spatial
   ),
   xy = xy,
   repetitions = 100,
-  metrics = "rmse",
-  verbose = FALSE
+  metrics = "rmse"
 )
 ```
+]
+]
+
+.pull-right[
+&lt;img src="talk_files/figure-html/unnamed-chunk-23-1.png" width="100%" /&gt;
 ]
 
 ---
 class: middle center
 
 ## Model comparison
+&lt;br&gt;
 
 &lt;table&gt;
  &lt;thead&gt;
   &lt;tr&gt;
    &lt;th style="text-align:left;"&gt; Model &lt;/th&gt;
    &lt;th style="text-align:right;"&gt; spatial predictors &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; Moran's I residuals &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Moran's I of residuals &lt;/th&gt;
    &lt;th style="text-align:right;"&gt; RMSE oob &lt;/th&gt;
    &lt;th style="text-align:right;"&gt; RMSE spatial cv &lt;/th&gt;
   &lt;/tr&gt;
@@ -712,23 +514,16 @@ class: middle center
   &lt;tr&gt;
    &lt;td style="text-align:left;"&gt; Non spatial &lt;/td&gt;
    &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 0.13 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 976 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 3221 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.15 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1024 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3104 &lt;/td&gt;
   &lt;/tr&gt;
   &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Distance matrix &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 227 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; -0.03 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 1027 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 3800 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; MEM sequential &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 17 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 0.04 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 962 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 3553 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Spatial &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 18 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.03 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 978 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3514 &lt;/td&gt;
   &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
@@ -739,7 +534,47 @@ class: middle center
 
 ## Variable importance 
 
-&lt;img src="talk_files/figure-html/unnamed-chunk-36-1.png" width="120%" height="60%" /&gt;
+&lt;img src="talk_files/figure-html/unnamed-chunk-25-1.png" width="120%" height="60%" /&gt;
+
+---
+class: middle center
+
+## Importance of spatial predictors
+
+&lt;img src="talk_files/figure-html/unnamed-chunk-26-1.png" width="120%" height="60%" /&gt;
+
+
+---
+class: middle center
+
+## Response curves
+
+&lt;img src="talk_files/figure-html/unnamed-chunk-27-1.png" width="120%" height="60%" /&gt;
+
+---
+class: middle left
+
+## A FEW IDEAS
+
+
+- **Spatial predictors** reduce SAC in model residuals (**GOOD**)
+- **Spatial predictors** hinder model transferability (**KINDA BAD**)
+- **Eigenvectors**: Outcome similar to base model, plus information about the importance of spatial processes (**GOOD**)
+- Computational demands limit sample size
+
+---
+class: middle center
+
+## FINAL MESSAGE
+
+.medium[
+Incorporating **eigenvectors of the distance matrix** into spatial analyses might improve understanding on underlying spatial processes not represented by the covariates.
+]
+
+---
+class: middle
+background-image: url("figures/end.png")
+background-size: contain
 
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
