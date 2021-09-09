@@ -20,7 +20,7 @@
  * ------------------------------------------------------- */
 @import url(https://fonts.googleapis.com/css?family=Montserrat&display=swap);
 @import url(https://fonts.googleapis.com/css?family=Montserrat&display=swap);
-@import url(https://fonts.googleapis.com/css?family=Fira+Mono&display=swap);
+@import url(https://fonts.googleapis.com/css?family=IBM+Plex+Mono&display=swap);
 
 
 :root {
@@ -32,7 +32,7 @@
   --header-font-family: Montserrat;
   --header-font-is-google: 1;
   --header-font-family-fallback: Georgia, serif;
-  --code-font-family: 'Fira Mono';
+  --code-font-family: 'IBM Plex Mono';
   --code-font-is-google: 1;
   --base-font-size: 20px;
   --text-font-size: 1rem;
